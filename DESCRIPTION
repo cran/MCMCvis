@@ -1,13 +1,10 @@
 Package: MCMCvis
 Type: Package
 Title: Tools to Visualize, Manipulate, and Summarize MCMC Output
-Version: 0.6.3
+Version: 0.7.0
 Author: Casey Youngflesh
 Maintainer: Casey Youngflesh <caseyyoungflesh@gmail.com>
-Description: Performs key functions for MCMC analysis using minimal code - visualizes,
-  manipulates, and summarizes MCMC output. Functions support simple and straightforward subsetting of
-  model parameters within the calls, and produce presentable and 'publication-ready' output.
-  MCMC output may be derived from Bayesian model output fit with JAGS, Stan, or other MCMC samplers.
+Description: Performs key functions for MCMC analysis using minimal code - visualizes, manipulates, and summarizes MCMC output. Functions support simple and straightforward subsetting of model parameters within the calls, and produce presentable and 'publication-ready' output. MCMC output may be derived from Bayesian model output fit with JAGS, Stan, or other MCMC samplers.
 License: GPL-3
 URL: http://github.com/caseyyoungflesh/MCMCvis
 BugReports: http://github.com/caseyyoungflesh/MCMCvis/issues
@@ -18,6 +15,6 @@ RoxygenNote: 5.0.1
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2016-10-06 12:48:23 UTC; caseyyoungflesh
+Packaged: 2017-01-04 18:09:53 UTC; caseyyoungflesh
 Repository: CRAN
-Date/Publication: 2016-10-06 20:09:44
+Date/Publication: 2017-01-05 10:39:18

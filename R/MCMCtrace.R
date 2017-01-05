@@ -1,6 +1,6 @@
 #' Trace and density plots from MCMC output
 #'
-#' Trace plots and density plots of MCMC chains for specific parameters of interest. Option to
+#' Trace and density plots of MCMC chains for specific parameters of interest. Option to
 #' print plots to pdf.
 #'
 #' @param object Object containing MCMC output. See DETAILS below.
@@ -10,11 +10,11 @@
 #' Default \code{'all'} returns chains for all parameters.
 #'
 #' @param excl Character string (or vector of character strings) denoting parameters to exclude.
-#' Partical names may be used to exclude all parameters contaiing that set of characters. Used in
+#' Partial names may be used to exclude all parameters containing that set of characters. Used in
 #' conjunction with \code{params} argument to select parameters of interest.
 #'
-#' @param iter_st Starting point in chain for trace and density plots. Default is 1, meaning
-#' the entire chain is plotted.
+#' @param iter Number of iterations to plot for trace and density plots. The default value is 2000,
+#'  meaning the last 2000 iterations of the chain will be plotted.
 #'
 #' @param pdf Logical - if \code{pdf = TRUE} plots will be exported to a pdf.
 #' @param filename Name of pdf file to be printed.
@@ -43,13 +43,15 @@
 MCMCtrace <- function(object,
                     params = 'all',
                     excl = NULL,
-                    iter_st = 1,
+                    iter = 2000,
                     pdf = FALSE,
                     filename,
                     wd = getwd(),
                     type = 'both',
                     ind = FALSE)
 {
+
+  .pardefault <- graphics::par(no.readonly = T)
 
   if(typeof(object) == 'S4')
   {
@@ -81,7 +83,12 @@ MCMCtrace <- function(object,
 
   names <- colnames(temp[[1]])
   n_chains <- length(temp)
-  it <- iter_st:nrow(temp[[1]])
+  if (nrow(temp[[1]]) > iter)
+  {
+    it <- (nrow(temp[[1]]) - iter) : nrow(temp[[1]])
+  }else {
+    it <- 1 : nrow(temp[[1]])
+  }
 
   if(!is.null(excl))
   {
@@ -200,7 +207,6 @@ MCMCtrace <- function(object,
     pdf(file= file_out)
   }
 
-  .pardefault <- graphics::par(no.readonly = T)
 
   graphics::layout(matrix(c(1, 2, 3, 4, 5, 6), 3, 2, byrow = TRUE))
   graphics::par(mar = c(4.1,4.1,2.1,1.1)) # bottom, left, top, right
@@ -218,7 +224,7 @@ MCMCtrace <- function(object,
     for (j in 1: length(g_filt))
     {
       #trace
-      tmlt <- do.call('cbind', temp[it,g_filt[j]])
+      tmlt <- do.call('cbind', temp[it, g_filt[j]])
       graphics::matplot(it, tmlt, lwd = 1, lty= 1, type='l', main = paste0('Trace - ', names[g_filt[j]]),
               col= grDevices::rgb(red= gg_cols[1,], green= gg_cols[2,],
                        blue= gg_cols[3,], alpha = 0.5),
@@ -304,11 +310,12 @@ MCMCtrace <- function(object,
     stop('Invalid argument for "type". Valid inputs are "both", "trace", and "density".')
   }
 
-  graphics::par(.pardefault)
-
   if(pdf == TRUE)
   {
     invisible(grDevices::dev.off())
     system(paste0('open ', paste0('"', file_out, '"')))
   }
+
+  graphics::par(.pardefault)
+
 }

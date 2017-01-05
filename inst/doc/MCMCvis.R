@@ -32,7 +32,7 @@ MCMCtrace(MCMC_data,
 ## ---- fig.width=5, fig.height=6------------------------------------------
 MCMCtrace(MCMC_data, 
         params = c('beta[1]', 'beta[2]', 'beta[3]'),
-        iter_st = 1800,
+        iter = 1800,
         ind = TRUE)
 
 ## ---- eval=FALSE---------------------------------------------------------
@@ -61,7 +61,15 @@ MCMCplot(MCMC_data,
 ## ---- fig.width=5, fig.height=6------------------------------------------
 MCMCplot(MCMC_data, 
        params = 'beta', 
-       rank = TRUE)
+       rank = TRUE,
+       xlab = 'ESTIMATE')
+
+## ---- fig.width=5, fig.height=6------------------------------------------
+MCMCplot(MCMC_data, 
+       params = 'beta', 
+       rank = TRUE,
+       horiz = FALSE,
+       ylab = 'ESTIMATE')
 
 ## ---- fig.width=5, fig.height=6------------------------------------------
 MCMCplot(MCMC_data, 

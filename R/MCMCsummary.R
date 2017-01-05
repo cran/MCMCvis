@@ -11,10 +11,11 @@
 #' Default \code{'all'} returns all parameters in summary output.
 #'
 #' @param excl Character string (or vector of character strings) denoting parameters to exclude.
-#' Partical names may be used to exclude all parameters contaiing that set of characters. Used in
+#' Partial names may be used to exclude all parameters containing that set of characters. Used in
 #' conjunction with \code{params} argument to select parameters of interest.
 #'
-#' @param digits Number of digits to include for posterior summary. Values will be rounded to the specified value.
+#' @param digits Number of digits to include for posterior summary. Values will be rounded to the specified
+#' number of digits.
 #' Default is \code{digits = 2}.
 #'
 #' @param Rhat If \code{TRUE}, summary information contains Gelman-Rubin convergence statistic (Rhat)
@@ -27,7 +28,7 @@
 #'
 #' @section Notes:
 #'
-#' For \code{mcmc.list} objects, Gelman-Rubin convergence statistic  (Rhat) is calculated using the
+#' For \code{mcmc.list} objects, Gelman-Rubin convergence statistic (Rhat) is calculated using the
 #' \code{gelman.diag} function in the \code{coda} package.
 #'
 #' @return Function returns summary information (including parameter posterior mean, 2.5\% quantile, median, 97.5\%
@@ -48,27 +49,28 @@
 #'
 #' @export
 
+
 MCMCsummary <- function(object,
                       params = 'all',
                       excl = NULL,
                       digits = 2,
                       Rhat = TRUE)
 {
+  if(coda::is.mcmc.list(object) != TRUE &
+     typeof(object) != 'double' &
+     typeof(object) != 'list' &
+     typeof(object) != 'S4')
+  {
+    stop('Invalid object type. Input must be stanfit object, mcmc.list object, rjags object, or matrix with MCMC chains.')
+  }
+
+
   if(typeof(object) == 'list' & coda::is.mcmc.list(object) == FALSE)
   {
-    #modified coda::as.mcmc (removing ordering of param names)
-    x <- object$BUGSoutput
-    mclist <- vector("list", x$n.chains)
-    mclis <- vector("list", x$n.chains)
-    strt <- x$n.burnin + 1
-    end <- x$n.iter
-    ord <- dimnames(x$sims.array)[[3]]
-    for (i in 1:x$n.chains)
-    {
-      tmp1 <- x$sims.array[, i, ord]
-      mclis[[i]] <- coda::mcmc(tmp1, start = strt, end = end, thin = x$n.thin)
-    }
-    object2 <- coda::as.mcmc.list(mclis)
+    x <- round(object$BUGSoutput$summary[,c(1, 3, 5, 7, 8)], digits = digits)
+    to.rm <- which(rownames(x) == 'deviance')
+    mcmc_summary <- x[-to.rm,] #already have mcmc_summary
+    names <- rownames(mcmc_summary)
   } else {
     if(typeof(object) == 'S4')
     {
@@ -76,42 +78,42 @@ MCMCsummary <- function(object,
     } else {
       object2 <- object
     }
-  }
 
-  if(coda::is.mcmc.list(object2) == TRUE)
-  {
-    temp <- object2
-    names <- colnames(temp[[1]])
-
-    ch_bind <- do.call('rbind', temp)
-
-    bind_mn <- round(apply(ch_bind, 2, mean), digits = digits)
-    bind_LCI <- round(apply(ch_bind, 2, stats::quantile, probs= 0.025), digits = digits)
-    bind_med <- round(apply(ch_bind,2, stats::median), digits = digits)
-    bind_UCI <- round(apply(ch_bind, 2, stats::quantile, probs= 0.975), digits = digits)
-    r_hat <- round(coda::gelman.diag(temp)$psrf[,1], digits = digits)
-
-    mcmc_summary <- cbind(bind_mn, bind_LCI, bind_med, bind_UCI, r_hat)
-    colnames(mcmc_summary) <- c('mean','2.5%','50%','97.5%', 'Rhat')
- }
-
-  if(typeof(object2) == 'double')
-  {
-    temp <- object2
-    names <- colnames(temp)
-
-    bind_mn <- round(apply(temp, 2, mean), digits = digits)
-    bind_LCI <- round(apply(temp, 2, stats::quantile, probs= 0.025), digits = digits)
-    bind_med <- round(apply(temp,2, stats::median), digits = digits)
-    bind_UCI <- round(apply(temp, 2, stats::quantile, probs= 0.975), digits = digits)
-    if(Rhat == TRUE)
+    if(coda::is.mcmc.list(object2) == TRUE)
     {
-      warning('Rhat statistic cannot be calculated without individaul chains. NAs inserted.')
-    }
-    r_hat <- rep(NA, NCOL(temp))
+      temp <- object2
+      names <- colnames(temp[[1]])
 
-    mcmc_summary <- cbind(bind_mn, bind_LCI, bind_med, bind_UCI, r_hat)
-    colnames(mcmc_summary) <- c('mean','2.5%','50%','97.5%', 'Rhat')
+      ch_bind <- do.call('rbind', temp)
+
+      bind_mn <- round(apply(ch_bind, 2, mean), digits = digits)
+      bind_LCI <- round(apply(ch_bind, 2, stats::quantile, probs= 0.025), digits = digits)
+      bind_med <- round(apply(ch_bind,2, stats::median), digits = digits)
+      bind_UCI <- round(apply(ch_bind, 2, stats::quantile, probs= 0.975), digits = digits)
+      r_hat <- round(coda::gelman.diag(temp, multivariate = FALSE)$psrf[,1], digits = digits)
+
+      mcmc_summary <- cbind(bind_mn, bind_LCI, bind_med, bind_UCI, r_hat)
+      colnames(mcmc_summary) <- c('mean','2.5%','50%','97.5%', 'Rhat')
+    }
+
+    if(typeof(object2) == 'double')
+    {
+      temp <- object2
+      names <- colnames(temp)
+
+      bind_mn <- round(apply(temp, 2, mean), digits = digits)
+      bind_LCI <- round(apply(temp, 2, stats::quantile, probs= 0.025), digits = digits)
+      bind_med <- round(apply(temp,2, stats::median), digits = digits)
+      bind_UCI <- round(apply(temp, 2, stats::quantile, probs= 0.975), digits = digits)
+      if(Rhat == TRUE)
+      {
+        warning('Rhat statistic cannot be calculated without individaul chains. NAs inserted.')
+      }
+      r_hat <- rep(NA, NCOL(temp))
+
+      mcmc_summary <- cbind(bind_mn, bind_LCI, bind_med, bind_UCI, r_hat)
+      colnames(mcmc_summary) <- c('mean','2.5%','50%','97.5%', 'Rhat')
+    }
   }
 
   if(!is.null(excl))
@@ -218,14 +220,6 @@ MCMCsummary <- function(object,
 
       OUT <- mcmc_summary[g_filt,]
     }
-  }
-
-  if(coda::is.mcmc.list(object2) != TRUE &
-     typeof(object2) != 'double' &
-     typeof(object2) != 'list' &
-     typeof(object2) != 'S4')
-  {
-      stop('Invalid object type. Input must be stanfit object, mcmc.list object, rjags object, or matrix with MCMC chains.')
   }
 
   if(Rhat == TRUE)
