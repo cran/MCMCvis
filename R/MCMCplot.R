@@ -1,15 +1,16 @@
 #' Caterpillar plots of posterior distributions from MCMC output
 #'
-#' Visualize posterior distributions from MCMC output for specific parameters of interest using caterpillar plots. Color of median dot represents the overlap of the posterior distrubtion with 0 (or other specified value).
+#' Visualize posterior distributions from MCMC output for specific parameters of interest using caterpillar plots. Color of median dot represents the overlap of the posterior distribution with 0 (or other specified value).
 #'
 #'
 #' @param object Object containing MCMC output. See DETAILS below.
-#' @param params Character string (or vector of character strings) denoting parameters to be plotted. Partial names may be used to plot all parameters containing that set of characters.
+#' @param params Character string (or vector of character strings) denoting parameters to be plotted.
 #'
 #' Default \code{'all'} plots posteriors for all parameters. See VALUE below.
 #'
+#' @param excl Character string (or vector of character strings) denoting parameters to exclude. Used in conjunction with \code{params} argument to select parameters of interest.
 #'
-#' @param excl Character string (or vector of character strings) denoting parameters to exclude. Partial names may be used to exclude all parameters containing that set of characters. Used in conjunction with \code{params} argument to select parameters of interest.
+#' @param ISB Ignore Square Brackets (ISB). Logical specifying whether square brackets should be ignored in the \code{params} and \code{excl} arguments. If \code{FALSE}, square brackets are ignored - input from \code{params} and \code{excl} are otherwise matched exactly. If \code{TRUE}, square brackets are not ignored - input from \code{params} and \code{excl} are matched using grep, allowing partial names to be used when specifying parameters of interest.
 #'
 #' @param ref Value indicating where vertical reference line should be created and what value to use a reference for caterpillar median coloration.
 #'
@@ -19,9 +20,9 @@
 #'
 #' @param ref_ovl Logical specifying whether the style/color of plotted median dots and CI should be changed based on whether the 50 \% and 95 \% credible intervals overlap the reference line. See DETAILS for more information.
 #'
-#' @param rank If \code{TRUE} posteriors will be ranked in decreasing order (based on specified measure of centrality) from top down.
+#' @param rank Logical specifying whether output should be ranked. If \code{TRUE} posteriors will be ranked in decreasing order (based on specified measure of centrality) from top down.
 #'
-#' @param horiz If \code{TRUE} posteriors will be plotted running horizontally (parallel to the x-axis). If \code{FALSE} posteriors will be plotted running vertically (perpendicular to the x-axis).
+#' @param horiz Logical specifying orientation of plot. If \code{TRUE} posteriors will be plotted running horizontally (parallel to the x-axis). If \code{FALSE} posteriors will be plotted running vertically (perpendicular to the x-axis).
 #' @param xlim Numerical vector of length 2, indicating range of x-axis. Only applicable if \code{horiz = TRUE}.
 #' @param ylim Numerical vector of length 2, indicating range of y-axis. Only applicable if \code{horiz = FALSE}.
 #' @param xlab Character string labeling x-axis. Only applicable if \code{horiz = TRUE}.
@@ -48,9 +49,9 @@
 #'
 #' @param ax_sz Number specifying thickness of axis and ticks.
 #'
-#' @param x_axis_text_sz Number specifying size of text for axis label.
+#' @param axis_text_sz Number specifying size of text for axis label.
 #'
-#' @param x_tick_text_sz Number specifying size of text for tick labels on axis.
+#' @param tick_text_sz Number specifying size of text for tick labels on axis.
 #'
 #' @param main_text_sz Number specifying size of text for main title.
 #'
@@ -61,7 +62,9 @@
 #' Default is c(5.1, 4.1, 4.1, 2.1) - the R plot default.
 #'
 #' @section Details:
-#' Points represent posterior medians. Parameters where 50\% credible intervals overlap 0 (or other specified value) are indicated by 'open' circles. Parameters where 50 percent credible intervals DO NOT overlap 0 AND 95 percent credible intervals DO overlap 0 (or other specified value) are indicated by 'closed' grey circles. Parameters where 95 percent credible intervals DO NOT overlap 0 (or other specified value) are indicated by 'closed' black circles. Thick lines represent 50 percent credible intervals while thin lines represent 95 \% credible intervals. \code{ref_ovl = FALSE} can be used to disable this feature. All median dots will be represented as 'closed' black circles. \code{object} argument can be a \code{stanfit} object (\code{rstan} package), an \code{mcmc.list} object (\code{coda} package), an \code{R2jags} model object (\code{R2jags} package), or a matrix containing MCMC chains (each column representing MCMC output for a single parameter, rows representing iterations in the chain). The function automatically detects the object type and proceeds accordingly.
+#' Points represent posterior medians. Parameters where 50\% credible intervals overlap 0 (or other specified value) are indicated by 'open' circles. Parameters where 50 percent credible intervals DO NOT overlap 0 AND 95 percent credible intervals DO overlap 0 (or other specified value) are indicated by 'closed' gray circles. Parameters where 95 percent credible intervals DO NOT overlap 0 (or other specified value) are indicated by 'closed' black circles. Thick lines represent 50 percent credible intervals while thin lines represent 95 \% credible intervals. \code{ref_ovl = FALSE} can be used to disable this feature. All median dots will be represented as 'closed' black circles.
+#'
+#' \code{object} argument can be a \code{stanfit} object (\code{rstan} package), an \code{mcmc.list} object (\code{coda} package), an \code{R2jags} model object (\code{R2jags} package), or a matrix containing MCMC chains (each column representing MCMC output for a single parameter, rows representing iterations in the chain). The function automatically detects the object type and proceeds accordingly.
 #'
 #' @section Notes:
 #'
@@ -86,7 +89,7 @@
 #' MCMCplot(MCMC_data, params = 'beta')
 #'
 #' #Just 'beta[1]', 'gamma[4]', and 'alpha[3]'
-#' MCMCplot(MCMC_data, params = c('beta[1]', 'gamma[4]', 'alpha[3]'))
+#' MCMCplot(MCMC_data, params = c('beta[1]', 'gamma[4]', 'alpha[3]'), ISB = FALSE)
 #'
 #' #Rank parameters by posterior mean
 #' MCMCplot(MCMC_data, params = 'beta', rank = TRUE)
@@ -101,6 +104,7 @@
 MCMCplot <- function(object,
                    params = 'all',
                    excl = NULL,
+                   ISB = TRUE,
                    ref = 0,
                    ref_ovl = TRUE,
                    rank = FALSE,
@@ -116,15 +120,13 @@ MCMCplot <- function(object,
                    thick_sz = 5,
                    thin_sz = 2,
                    ax_sz = 3,
-                   x_axis_text_sz = 1.3,
-                   x_tick_text_sz = 1.2,
+                   axis_text_sz = 1.3,
+                   tick_text_sz = 1.2,
                    main_text_sz = 1.2,
                    tick_pos,
                    mar = c(5.1, 4.1, 4.1, 2.1))
 {
-
-
-  data <- MCMCchains(object, params= params, excl = excl)
+  data <- MCMCchains(object, params = params, excl = excl, ISB = ISB)
 
   # Plotting parameters -----------------------------------------------------
 
@@ -135,6 +137,7 @@ MCMCplot <- function(object,
   ref_col = 'gray60' #color used for 0 line
   thin = 95 #CI for thin line
   thick = 50 #CI for thick line
+  PL_SC = 0.3 #how much whitespace flanks plotted estimates
 
   # Process data ------------------------------------------------------------
 
@@ -155,7 +158,6 @@ MCMCplot <- function(object,
         idx <- len:1
       }
 
-
       thick_ci <- c((100-((100-thick)/2)), ((100-thick)/2))*0.01
       thin_ci <- c((100-((100-thin)/2)), ((100-thin)/2))*0.01
 
@@ -163,7 +165,6 @@ MCMCplot <- function(object,
       thin_q <- apply(chains, 2, stats::quantile, probs= thin_ci)[,idx]
 
       medians <- apply(chains, 2, stats::quantile, probs = 0.5)[idx]
-
     }else
     {
       stop("'thick' and 'thin' must be single numbers")
@@ -185,14 +186,11 @@ MCMCplot <- function(object,
       thin_q <- as.matrix(apply(chains, 2, stats::quantile, probs= thin_ci)[,idx])
 
       medians <- apply(chains, 2, stats::quantile, probs = 0.5)[idx]
-
-
     }else
     {
       stop("'thick' and 'thin' must be single numbers")
     }
   }
-
 
   # plotting ----------------------------------------------------------------
 
@@ -230,9 +228,11 @@ MCMCplot <- function(object,
   #plot for horizontal - CI lines parallel to x-axis
   if (horiz == TRUE)
   {
-
     if (missing(xlim))
-    {xlim = range(thin_q)*1.2}
+    {
+      rn <- diff(range(thin_q))*PL_SC
+      xlim = c((min(thin_q) - rn), (max(thin_q) + rn))
+    }
     ylim = c(0.5,(len)+0.5)
     if (missing(xlab))
     {xlab = 'Parameter Estimate'}
@@ -271,7 +271,7 @@ MCMCplot <- function(object,
     #plot blank plot
     graphics::plot(medians, (1:len), xlim = xlim, ylim = ylim, type = "n",
          ann = TRUE, xaxt = 'n', yaxt = "n", bty = "n", ylab = NA,
-         xlab = xlab, cex.lab = x_axis_text_sz) #cex.lab is axis label
+         xlab = xlab, cex.lab = axis_text_sz) #cex.lab is axis label
     #lab #number of ticks to plot on each axis
 
     #title
@@ -282,7 +282,7 @@ MCMCplot <- function(object,
     #bottom axis params
     graphics::axis(1, lwd.ticks = ax_sz, labels = TRUE,
          at = tick_pos, lwd = ax_sz,
-         cex.axis = x_tick_text_sz) #bottom axis
+         cex.axis = tick_text_sz) #bottom axis
     #left axis params (labels)
     graphics::axis(2, at = ((1:len)+(0.0015*len)), tick = FALSE,
          labels = labs, las = 1, adj = 0, #las - 0 parallel to axis, 1 horiz, 2 perp to axis, 3 vert
@@ -292,7 +292,6 @@ MCMCplot <- function(object,
     blk_bnd <- rbind(black_cl, black_cl)
     gry_bnd <- rbind(gray_cl, gray_cl)
     wht_bnd <- rbind(white_cl, white_cl)
-
 
     #ref line
     if(!is.null(ref))
@@ -352,9 +351,11 @@ MCMCplot <- function(object,
   #vertical plot - CI lines perpendicular to x-axis
   if (horiz == FALSE)
   {
-
     if (missing(ylim))
-    {ylim = range(thin_q)*1.2}
+    {
+      rn <- diff(range(thin_q))*PL_SC
+      ylim = c((min(thin_q) - rn), (max(thin_q) + rn))
+    }
     xlim = c(0.5,(len)+0.5)
     if (missing(ylab))
     {ylab = 'Parameter Estimate'}
@@ -385,24 +386,44 @@ MCMCplot <- function(object,
       }
     }
 
+    #to determine margins for plot
     #0.2 inches per line - mar measured in lines
     m_char <- (max(sapply(labs, function(x){graphics::strwidth(x, cex = labels_sz, units = 'in')}))/0.2)
-    graphics::par(mar = c((m_char + (mar[1] - 4)), mar[2]+1, mar[3] - 1, mar[4]))
-
-    #plot blank plot
+    #blank plot - do not display
+    grDevices::pdf(file = NULL)
     graphics::plot((len:1), medians, xlim = xlim, ylim = ylim, type = "n",
-                   ann = TRUE, xaxt = 'n', yaxt = "n", bty = "n", ylab = ylab,
-                   xlab = NA, cex.lab = x_axis_text_sz)
+                   ann = TRUE, xaxt = 'n', yaxt = "n", bty = "n", ylab = NA,
+                   xlab = NA, cex.lab = axis_text_sz)
+    #create invisible ticks to determine where to put y-axis label
+    tickp <- graphics::axis(2, lwd.ticks = ax_sz, labels = FALSE,
+                            at = tick_pos, lwd = ax_sz,
+                            cex.axis = tick_text_sz, las = 1, col = 'white',
+                            col.ticks = 'white')
+    invisible(grDevices::dev.off())
+    #determine how long labels are
+    ml_tickp <- max(graphics::strwidth(tickp, cex = tick_text_sz, units = 'in'))
+    #5 lines/inch
+    ll <- 1.8 + 5 * ml_tickp
+    #set plot margins according to labels
+    graphics::par(mar = c((m_char + (mar[1] - 4)), mar[2]+1+ll-3, mar[3] - 1.5, mar[4]))
+
+    #new blank plot
+    graphics::plot((len:1), medians, xlim = xlim, ylim = ylim, type = "n",
+                   ann = TRUE, xaxt = 'n', yaxt = "n", bty = "n", ylab = NA,
+                   xlab = NA, cex.lab = axis_text_sz)
+    #ticks
+    graphics::axis(2, lwd.ticks = ax_sz, labels = TRUE,
+                   at = tick_pos, lwd = ax_sz,
+                   cex.axis = tick_text_sz, las = 1)
+    #y-axis label
+    graphics::title(ylab = ylab, cex.lab = axis_text_sz, line = ll)
 
     #title
-    graphics::title(main, cex.main = main_text_sz)
+    graphics::title(main, cex.main = main_text_sz, line = 0.5)
     #right axis params
     graphics::axis(4, lwd.ticks = ax_sz, labels = FALSE,
                    at = tick_pos, lwd = ax_sz)
-    #left axis params
-    graphics::axis(2, lwd.ticks = ax_sz, labels = TRUE,
-                   at = tick_pos, lwd = ax_sz,
-                   cex.axis = x_tick_text_sz) #bottom axis
+
     #bottom axis params (labels)
     graphics::axis(1, at = (len:1) + 0.013, tick = FALSE,
                    labels = labs, las = 2, adj = 0, #las - 0 parallel to axis, 1 horiz, 2 perp to axis, 3 vert
@@ -413,7 +434,6 @@ MCMCplot <- function(object,
     {
       graphics::abline(h=ref, lty = 2, lwd = 3, col = ref_col)
     }
-
 
     #positions to plot CI
     v_black_cl <- rev(black_cl)
@@ -472,8 +492,5 @@ MCMCplot <- function(object,
                        col = 'black', cex = med_sz)
     }
   }
-
-
   graphics::par(mar=c(5,4,4,2) + 0.1)
-
 }

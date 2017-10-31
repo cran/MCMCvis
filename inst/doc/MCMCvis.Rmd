@@ -27,7 +27,7 @@ The package contains four functions:
 
 ## MCMCsummary
 
-`MCMCsummary` is used to output summary information from MCMC output. This function accepts `stanfit` objects, `mcmc.list` objects, `R2jags` model output, and matrices of MCMC output (one chain per column). The function automatically detects the object type and proceeds accordingly. Two decimal places are reported by default. This can be changed using the `digits` argument.
+`MCMCsummary` is used to output summary information from MCMC output. This function accepts `stanfit` objects (created with the `rstan` package), `mcmc.list` objects (create with the `rjags` or `coda` packages), `R2jags` output (created with the `R2jags` package), and matrices of MCMC output (one chain per column). The function automatically detects the object type and proceeds accordingly. Two decimal places are reported by default. This can be changed using the `digits` argument.
 
 ```{r, message=FALSE}
 library(MCMCvis)
@@ -39,7 +39,7 @@ MCMCsummary(MCMC_data)
 
 &nbsp;
 
-Specific parameters can be specified to subset summary information. Partial names may be used to specify any parameter containing that name. For instance, for all `alpha` parameters.
+Specific parameters can be specified to subset summary information. Square brackets are ignored by default. For instance, all `alpha` parameters can be plotted using `params = 'alpha'`.
 
 ```{r}
 MCMCsummary(MCMC_data, 
@@ -48,33 +48,62 @@ MCMCsummary(MCMC_data,
 
 &nbsp;
 
-Individual parameters can also be specified.
+Individual parameters can also be specified. For example, one `alpha` (of many) may be specified. In this case, the square brackets should be ignored to only specify the `alpha[1]` parameter. Use the argument `ISB = FALSE` to specify particular parameters that contain brackets. ISB is short for 'Ignore Square Brackets'. 
 
 ```{r}
 MCMCsummary(MCMC_data, 
-          params = 'alpha[1]')
+          params = 'alpha[1]', 
+          ISB = FALSE)
 ```
 
 &nbsp;
 
-The `excl` argument can be used to exclude any parameters. This can be used in conjunction with the `params` argument. For instance, if all `alpha` parameters are desired **except** for `alpha[1]`, `params = 'alpha', excl = 'alpha[1]'` can be used. These arguments can be used in any of the functions in the package.
+The `excl` argument can be used to exclude any parameters. This can be used in conjunction with the `params` argument. This is particularly useful when specifying `ISB = FALSE`. For instance, if all `alpha` parameters are desired **except** for `alpha[1]`, `params = 'alpha', excl = 'alpha[1]', ISB = FALSE` can be used. When `ISB = TRUE`, an exact match of the specified parameter is required (excluding the square brackets). When `ISB = FALSE`, partial names will be matched. Leaving the default (`ISB = TRUE`) is generally recommended for simplicity. These arguments can be used in any of the functions in the package.
 
 ```{r}
 MCMCsummary(MCMC_data, 
           params = 'alpha',
-          excl = 'alpha[1]')
+          excl = 'alpha[1]', 
+          ISB = FALSE)
 ```
 
 
 &nbsp;
 
+Setting the `Rhat` and `n.eff` arguments to `FALSE` can be used to avoid calculating the Rhat statistic and number of effective samples, respectively (default for `Rhat` and `n.eff` are `TRUE` and `FALSE`, respectively). Specifying `FALSE` can greatly increase function speed with very large `mcmc.list` objects. Values for Rhat near 1 suggest convergence (Brooks and Gelman 1998). Kruschke (2014) recommends n.eff > 10,000 for reasonably stable posterior estimates.
+
+```{r}
+MCMCsummary(MCMC_data, 
+          params = 'alpha',
+          Rhat = TRUE,
+          n.eff = TRUE)
+```
+
+&nbsp;
+
+The `func` argument can be used to return metrics of interest not already returned by default for `MCMCsummary`. Input is a function to be performed on posteriors for each specified parameter. Values returned by function will be displayed as a column in the summary output (or multiple columns if the function returns more than one value). In this way, functions from other packages can be used to derives metrics of interest on posterior output.
+
+```{r}
+MCMCsummary(MCMC_data, 
+          params = 'alpha',
+          Rhat = TRUE,
+          n.eff = TRUE,
+          func = function(x) quantile(x, probs = c(0.01, 0.99)),
+          func_name = c('1%', '99%'))
+```
+
+&nbsp;
+
+
 ## MCMCtrace
 
-`MCMCtrace` is used to create trace and density plots for MCMC output. This is useful for diagnostic purposes. Particular parameters can also be specified, as with `MCMCsummary`.
+`MCMCtrace` is used to create trace and density plots for MCMC output. This is useful for diagnostic purposes. Particular parameters can also be specified, as with `MCMCsummary`. Output is written to PDF by default to enable more efficient review of posteriors - this also reduces computation time. PDF output is particularly recommended for large numbers of parameters. `pdf = FALSE` can be used to prevent output to PDF.
 
 ```{r, fig.width=5, fig.height=6}
 MCMCtrace(MCMC_data, 
-        params = c('beta[1]', 'beta[2]', 'beta[3]'))
+        params = c('beta[1]', 'beta[2]', 'beta[3]'),
+        ISB = FALSE,
+        pdf = FALSE)
 ```
 
 &nbsp;
@@ -83,26 +112,15 @@ Just trace plot can be plotted with `type = 'trace'`. Just density plots can be 
 
 ```{r, fig.width=5, fig.height=6}
 MCMCtrace(MCMC_data, 
-        params = c('beta[1]', 'beta[2]', 'beta[3]',
-                'beta[4]', 'beta[5]', 'beta[6]'),
+        params = 'beta',
         type = 'density',
-        ind = TRUE)
+        ind = TRUE, 
+        pdf = FALSE)
 ```
 
 &nbsp;
 
-`iter` denotes how many iterations shoudl be plotted for the chain the trace and density plots. The default is 2000, meaning that the last 2000 iterations of each chain are plotted. Remember, this is the final posterior chain, not including the specified burn-in (specified when the model was run).
-
-```{r, fig.width=5, fig.height=6}
-MCMCtrace(MCMC_data, 
-        params = c('beta[1]', 'beta[2]', 'beta[3]'),
-        iter = 1800,
-        ind = TRUE)
-```
-
-&nbsp;
-
-Trace plots can also be output to PDF format. This is recommended for large numbers of parameters, as output to PDF makes for quicker browsing compared to browsing within the R GUI. PDF document will be output to the current working directory by default, but another directory can be specified.
+PDF document will be output to the current working directory by default, but another directory can be specified.
 
 ```{r, eval=FALSE}
 MCMCtrace(MCMC_data, 
@@ -110,6 +128,20 @@ MCMCtrace(MCMC_data,
         filename = 'MYpdf', 
         wd = 'DIRECTORY HERE')
 ```
+
+&nbsp;
+
+`iter` denotes how many iterations should be plotted for the chain the trace and density plots. The default is 5000, meaning that the last 5000 iterations of each chain are plotted. Remember, this is the final posterior chain, not including the specified burn-in (specified when the model was run). If less than 5000 iterations are run, the full number of iterations will be plotted.
+
+```{r, fig.width=5, fig.height=6}
+MCMCtrace(MCMC_data, 
+        params = c('beta[1]', 'beta[2]', 'beta[3]'),
+        ISB = FALSE,
+        iter = 1800,
+        ind = TRUE,
+        pdf = FALSE)
+```
+
 
 &nbsp;
 
@@ -164,7 +196,7 @@ MCMCplot(MCMC_data,
 
 &nbsp;
 
-The orientation of the plot can also be change using the `horiz` argument. `ylab` is then used to specify an alternaive label on the 'estimate axis'.
+The orientation of the plot can also be change using the `horiz` argument. `ylab` is then used to specify an alternative label on the 'estimate axis'.
 
 ```{r, fig.width=5, fig.height=6}
 MCMCplot(MCMC_data, 
@@ -194,6 +226,15 @@ MCMCplot(MCMC_data,
        ax_sz = 4,
        main_text_sz = 2)
 ```
+
+
+## References
+
+Brooks, S. P., and A. Gelman. 1998. General methods for monitoring convergence of iterative simulations. Journal of Computational and Graphical Statistics 7:434.
+
+Kruschke, J. 2014. Doing Bayesian data analysis: A tutorial with R, JAGS, and Stan. Academic Press.
+
+&nbsp;
 
 **For more information see `?MCMCplot`**
 

@@ -11,35 +11,55 @@ MCMCsummary(MCMC_data,
 
 ## ------------------------------------------------------------------------
 MCMCsummary(MCMC_data, 
-          params = 'alpha[1]')
+          params = 'alpha[1]', 
+          ISB = FALSE)
 
 ## ------------------------------------------------------------------------
 MCMCsummary(MCMC_data, 
           params = 'alpha',
-          excl = 'alpha[1]')
+          excl = 'alpha[1]', 
+          ISB = FALSE)
 
-## ---- fig.width=5, fig.height=6------------------------------------------
-MCMCtrace(MCMC_data, 
-        params = c('beta[1]', 'beta[2]', 'beta[3]'))
+## ------------------------------------------------------------------------
+MCMCsummary(MCMC_data, 
+          params = 'alpha',
+          Rhat = TRUE,
+          n.eff = TRUE)
 
-## ---- fig.width=5, fig.height=6------------------------------------------
-MCMCtrace(MCMC_data, 
-        params = c('beta[1]', 'beta[2]', 'beta[3]',
-                'beta[4]', 'beta[5]', 'beta[6]'),
-        type = 'density',
-        ind = TRUE)
+## ------------------------------------------------------------------------
+MCMCsummary(MCMC_data, 
+          params = 'alpha',
+          Rhat = TRUE,
+          n.eff = TRUE,
+          func = function(x) quantile(x, probs = c(0.01, 0.99)),
+          func_name = c('1%', '99%'))
 
 ## ---- fig.width=5, fig.height=6------------------------------------------
 MCMCtrace(MCMC_data, 
         params = c('beta[1]', 'beta[2]', 'beta[3]'),
-        iter = 1800,
-        ind = TRUE)
+        ISB = FALSE,
+        pdf = FALSE)
+
+## ---- fig.width=5, fig.height=6------------------------------------------
+MCMCtrace(MCMC_data, 
+        params = 'beta',
+        type = 'density',
+        ind = TRUE, 
+        pdf = FALSE)
 
 ## ---- eval=FALSE---------------------------------------------------------
 #  MCMCtrace(MCMC_data,
 #          pdf = TRUE,
 #          filename = 'MYpdf',
 #          wd = 'DIRECTORY HERE')
+
+## ---- fig.width=5, fig.height=6------------------------------------------
+MCMCtrace(MCMC_data, 
+        params = c('beta[1]', 'beta[2]', 'beta[3]'),
+        ISB = FALSE,
+        iter = 1800,
+        ind = TRUE,
+        pdf = FALSE)
 
 ## ------------------------------------------------------------------------
 ex <- MCMCchains(MCMC_data, 

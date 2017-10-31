@@ -4,22 +4,17 @@
 #'
 #' @param object Object containing MCMC output. See DETAILS below.
 #' @param params Character string (or vector of character strings) denoting parameters of interest.
-#' Partial names may be used to return all parameters containing that set of characters.
 #'
 #' Default \code{'all'} returns chains for all parameters.
 #'
-#' @param excl Character string (or vector of character strings) denoting parameters to exclude.
-#' Partial names may be used to exclude all parameters containing that set of characters. Used in
-#' conjunction with \code{params} argument to select parameters of interest.
+#' @param excl Character string (or vector of character strings) denoting parameters to exclude. Used in conjunction with \code{params} argument to select parameters of interest.
+#'
+#' @param ISB Ignore Square Brackets (ISB). Logical specifying whether square brackets should be ignored in the \code{params} and \code{excl} arguments. If \code{FALSE}, square brackets are ignored - input from \code{params} and \code{excl} are otherwise matched exactly. If \code{TRUE}, square brackets are not ignored - input from \code{params} and \code{excl} are matched using grep, allowing partial names to be used when specifying parameters of interest.
 #'
 #' @section Details:
-#' Function returns matrix with one chain per column for specified parameters. Multiple input chains for each
-#' parameter are combined to one posterior chain.
+#' Function returns matrix with one chain per column for specified parameters. Multiple input chains for each parameter are combined to one posterior chain.
 #'
-#' \code{object} argument can be a \code{stanfit} object (\code{rstan} package), an \code{mcmc.list} object
-#' (\code{coda} package), an \code{R2jags} model object (\code{R2jags} package), or a matrix containing MCMC
-#' chains (each column representing MCMC output for a single parameter, rows representing iterations in the chain).
-#' The function automatically detects the object type and proceeds accordingly.
+#' \code{object} argument can be a \code{stanfit} object (\code{rstan} package), an \code{mcmc.list} object (\code{coda} package), an \code{R2jags} model object (\code{R2jags} package), or a matrix containing MCMC chains (each column representing MCMC output for a single parameter, rows representing iterations in the chain). The function automatically detects the object type and proceeds accordingly.
 #'
 #'
 #' @examples
@@ -31,44 +26,73 @@
 #' apply(ex, 2, mean)
 #'
 #' #Extract MCMC chains for just 'beta' parameters
-#' ex2 <- MCMCchains(MCMC_data, params='beta')
+#' ex2 <- MCMCchains(MCMC_data, params = 'beta')
 #' apply(ex2, 2, mean)
+#'
+#' #Just 'beta[1]', 'gamma[4]', and 'alpha[3]'
+#' ex3 <- MCMCchains(MCMC_data, params = c('beta[1]', 'gamma[4]', 'alpha[3]'), ISB = FALSE)
+#' apply(ex3, 2, sd)
 #'
 #' @export
 
 MCMCchains <- function(object,
                      params = 'all',
-                     excl = NULL)
+                     excl = NULL,
+                     ISB = TRUE)
 {
-
+    #NAME SORTING BLOCK
     if(typeof(object) == 'S4')
     {
       temp_in <- rstan::As.mcmc.list(object)
-      names <- colnames(temp_in[[1]])
-
-      temp <- do.call('rbind', temp_in)
+      if(ISB == TRUE)
+      {
+        names <- vapply(strsplit(colnames(temp_in[[1]]),
+                                 split = "[", fixed = TRUE), `[`, 1, FUN.VALUE=character(1))
+      }else{
+        names <- colnames(temp_in[[1]])
+      }
     }
 
     if(coda::is.mcmc.list(object) == TRUE)
     {
       temp_in <- object
-      names <- colnames(temp_in[[1]])
-
-      temp <- do.call('rbind', temp_in)
+      if(ISB == TRUE)
+      {
+        names <- vapply(strsplit(colnames(temp_in[[1]]),
+                                 split = "[", fixed = TRUE), `[`, 1, FUN.VALUE=character(1))
+      }else{
+        names <- colnames(temp_in[[1]])
+      }
     }
 
     if(typeof(object) == 'double')
     {
-      temp <- object
-      names <- colnames(temp)
+      temp_in <- object
+      if(ISB == TRUE)
+      {
+        names <- vapply(strsplit(colnames(temp_in),
+                                 split = "[", fixed = TRUE), `[`, 1, FUN.VALUE=character(1))
+      }else{
+        names <- colnames(temp_in)
+      }
     }
 
-    if(typeof(object) == 'list' & coda::is.mcmc.list(object) == FALSE)
+    if(class(object) == 'rjags')
     {
-      temp <- object$BUGSoutput$sims.matrix
-      names <- colnames(temp)
+      temp_in <- object$BUGSoutput$sims.matrix
+      if(ISB == TRUE)
+      {
+        names <- vapply(strsplit(rownames(object$BUGSoutput$summary),
+                                 split = "[", fixed = TRUE), `[`, 1, FUN.VALUE=character(1))
+      }else{
+        names <- rownames(object$BUGSoutput$summary)
+      }
     }
 
+  if(class(object[[1]]) == 'mcarray')
+  {
+    stop('Invalid object type. jags.samples objects not currently supported. Input must be stanfit object, mcmc.list object, rjags object, or matrix with MCMC chains.')
+  }
 
   if(coda::is.mcmc.list(object) != TRUE &
      typeof(object) != 'double' &
@@ -79,111 +103,143 @@ MCMCchains <- function(object,
          rjags object (R2jags), or matrix with MCMC chains.')
   }
 
+  #INDEX BLOCK
+  #exclusions
   if(!is.null(excl))
   {
-    to.rm1 <- c()
+    rm_ind <- c()
     for (i in 1:length(excl))
     {
-      to.rm1 <- c(to.rm1, grep(excl[i], names, fixed = TRUE))
+      if(ISB == TRUE)
+      {
+        n_excl <- vapply(strsplit(excl,
+                                  split = "[", fixed = TRUE), `[`, 1, FUN.VALUE=character(1))
+        rm_ind <- c(rm_ind, which(names %in% n_excl[i]))
+      }else{
+        n_excl <- excl
+        rm_ind <- c(rm_ind, grep(n_excl[i], names, fixed = TRUE))
+      }
     }
-    dups <- -which(duplicated(to.rm1))
+    dups <- which(duplicated(rm_ind))
     if(length(dups) > 0)
     {
-      to.rm2 <- to.rm1[-dups]
+      rm_ind2 <- rm_ind[-dups]
     }else{
-      to.rm2 <- to.rm1
+      rm_ind2 <- rm_ind
     }
   }
 
+  #selections
   if (length(params) == 1)
   {
     if (params == 'all')
     {
       if(is.null(excl))
       {
-        OUT <- temp
+        f_ind <- 1:length(names)
       }else{
-        OUT <- temp[,-to.rm2]
+        f_ind <- (1:length(names))[-rm_ind2]
       }
-    }else
-    {
-      get.cols <- grep(paste(params), names, fixed=TRUE)
-      if (length(get.cols) < 1)
+    }else {
+      if(ISB == TRUE)
+      {
+        get_ind <- which(names %in% params)
+      }else{
+        get_ind <- grep(paste(params), names, fixed = TRUE)
+      }
+
+      if (length(get_ind) < 1)
       {
         stop(paste0('"', params, '"', ' not found in MCMC ouput.'))
       }
-
       if(!is.null(excl))
       {
-        if(identical(get.cols, to.rm2))
+        if(identical(get_ind, rm_ind2))
         {
           stop('No parameters selected.')
         }
-
-        matched <- which(get.cols == to.rm2)
+        matched <- stats::na.omit(match(rm_ind2, get_ind))
         if (length(matched) > 0)
         {
-          cols <- get.cols[-matched]
+          f_ind <- get_ind[-matched]
         }else {
-          cols <- get.cols
+          f_ind <- get_ind
         }
-
-      }else{
-        cols <- get.cols
+      }else {
+        f_ind <- get_ind
       }
-
-      OUT <- temp[,cols]
     }
-
-  }else
-  {
+  }else {
     grouped <- c()
     for (i in 1:length(params))
     {
-      get.cols <- grep(paste(params[i]), names, fixed=TRUE)
-      if (length(get.cols) < 1)
+      if(ISB == TRUE)
+      {
+        get_ind <- which(names %in% params[i])
+      }else{
+        get_ind <- grep(paste(params[i]), names, fixed=TRUE)
+      }
+
+      if (length(get_ind) < 1)
       {
         stop(paste0('"', params[i], '"', ' not found in MCMC ouput.'))
       }
-      grouped <- c(grouped, get.cols)
+      grouped <- c(grouped, get_ind)
     }
-
     if(!is.null(excl))
     {
-      if(identical(grouped, to.rm2))
+      if(identical(grouped, rm_ind2))
       {
         stop('No parameters selected.')
       }
-
-      matched <- stats::na.omit(match(to.rm2, grouped))
+      matched <- stats::na.omit(match(rm_ind2, grouped))
       if (length(matched) > 0)
       {
-        cols <- grouped[-matched]
+        t_ind <- grouped[-matched]
       } else{
-        cols <- grouped
+        t_ind <- grouped
       }
-
-      to.rm <- which(duplicated(cols))
+      to.rm <- which(duplicated(t_ind))
       if(length(to.rm) > 0)
       {
-        g_filt <- cols[-to.rm]
+        f_ind <- t_ind[-to.rm]
       }else
       {
-        g_filt <- cols
+        f_ind <- t_ind
       }
     } else{
-
       to.rm <- which(duplicated(grouped))
       if(length(to.rm) > 0)
       {
-        g_filt <- grouped[-to.rm]
+        f_ind <- grouped[-to.rm]
       }else
       {
-        g_filt <- grouped
+        f_ind <- grouped
       }
     }
+  }
 
-    OUT <- temp[,g_filt]
+
+  if(coda::is.mcmc.list(object) == TRUE)
+  {
+    if(length(f_ind) > 1)
+    {
+      dsort <- do.call(coda::mcmc.list, temp_in[,f_ind])
+      OUT <- do.call('rbind', dsort)
+    }else{
+      dsort <- do.call(coda::mcmc.list, temp_in[,c(f_ind, f_ind)])
+      OUT <- do.call('rbind', dsort)[,1]
+    }
+  }
+
+  if(typeof(object) == 'double')
+  {
+    OUT <- temp_in[,f_ind]
+  }
+
+  if(typeof(object) == 'list' & coda::is.mcmc.list(object) == FALSE)
+  {
+    OUT <- temp_in[,f_ind]
   }
 
   return(OUT)
