@@ -1,6 +1,25 @@
 NEWS
 ====
 
+0.9.2
+- `MCMCtrace` now takes matrix input (as with the other functions). One chain is assumed when matrix input is used.
+
+0.9.1
+- Fix bug that produced errors when using the `jags.parallel` function in the `R2jags` package.
+- All functions - when `ISB = FALSE`, `params` argument now takes the form of regular expressions
+- Examples for `MCMCtrace` no longer open up external programs (pdf viewer) per CRAN policy
+
+0.9.0:
+- `MCMCpstr` function now added. Function returns summary output for a specified function while preserving structure of parameters (i.e., scalar, vector, matrix, array).
+- `MCMCtrace` now takes a `priors` argument to visualize prior/posterior overlap. If specified, the prior (user specified as this information is not contained within the MCMC output) for a specified parameter is plotted on the same plot as the posterior output. Percent overlap between posterior and prior is also calculated and displayed.
+- Fix bug in `MCMCchains` that caused incorrect alphabetization of parameter names when output from R2jags was used.
+
+
+0.8.2:
+- `MCMCsummary` greatly speed up calculation of Rhat values for objects with large numbers of parameters
+- `MCMCchains` now takes the argument `mcmc.list`. If specified, `mcmc.list` object returned rather than a matrix.
+
+
 0.8.1:
 - Fix bug in `MCMCsummary` that displayed the same result twice when selecting only a single output parameter of interest
 - Fix bug in `MCMCplot` that displayed the axis label too close to tick labels when `horiz = FALSE` and tick labels were very long
@@ -28,7 +47,7 @@ NEWS
 0.7.1:
 
 - Fix bug in `MCMCplot` which incorrectly shaded parameter estimates when plotted vertically
-- `MCMCsummary` now displays estimates for deviance
+- `MCMCsummary` now displays estimates for deviance with MCMC output fits with R2jags
 
 
 0.7.0:

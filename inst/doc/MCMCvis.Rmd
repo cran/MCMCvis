@@ -12,12 +12,14 @@ vignette: >
 
 `MCMCvis` is an R package used to visualize, manipulate, and summarize MCMC output. MCMC output may be derived from Bayesian model output fit with JAGS, Stan, or other MCMC samplers.
 
-The package contains four functions:
+The package contains five functions:
 
 - `MCMCsummary` - summarize MCMC output for particular parameters of interest
+- `MCMCpstr` - summarize MCMC output for particular parameters of interest while preserving parameter structure
 - `MCMCtrace` - create trace and density plots of MCMC chains for particular parameters of interest
 - `MCMCchains` - easily extract posterior chains from MCMC output for particular parameters of interest
 - `MCMCplot` - create caterpillar plots from MCMC output for particular parameters of interest
+
 
 `MCMCvis` was designed to perform key functions for MCMC analysis using minimal code, in order to free up time/brainpower for interpretation of analysis results. Functions support simple and straightforward subsetting of model parameters within the calls, and produce presentable and 'publication-ready' output.
 
@@ -48,22 +50,22 @@ MCMCsummary(MCMC_data,
 
 &nbsp;
 
-Individual parameters can also be specified. For example, one `alpha` (of many) may be specified. In this case, the square brackets should be ignored to only specify the `alpha[1]` parameter. Use the argument `ISB = FALSE` to specify particular parameters that contain brackets. ISB is short for 'Ignore Square Brackets'. 
+Individual parameters can also be specified. For example, one `alpha` (of many) may be specified. In this case, the square brackets should not be ignored, so that only the `alpha[1]` parameter can be specified. Use the argument `ISB = FALSE` to specify particular parameters that contain brackets. ISB is short for 'Ignore Square Brackets'. When `ISB = FALSE`, the `params` argument reads like a regular expression. Because of this, the square brackets must be escaped with `\\`. All other regular expression syntax is accepted, as typically applied in R. A useful cheatsheet for regular expressions in R can be found <a href="https://www.rstudio.com/wp-content/uploads/2016/09/RegExCheatsheet.pdf">here</a>. `\\d` can be used to specify any digits in a particular place.
 
 ```{r}
 MCMCsummary(MCMC_data, 
-          params = 'alpha[1]', 
+          params = 'alpha\\[1\\]', 
           ISB = FALSE)
 ```
 
 &nbsp;
 
-The `excl` argument can be used to exclude any parameters. This can be used in conjunction with the `params` argument. This is particularly useful when specifying `ISB = FALSE`. For instance, if all `alpha` parameters are desired **except** for `alpha[1]`, `params = 'alpha', excl = 'alpha[1]', ISB = FALSE` can be used. When `ISB = TRUE`, an exact match of the specified parameter is required (excluding the square brackets). When `ISB = FALSE`, partial names will be matched. Leaving the default (`ISB = TRUE`) is generally recommended for simplicity. These arguments can be used in any of the functions in the package.
+The `excl` argument can be used to exclude any parameters. This can be used in conjunction with the `params` argument. This is particularly useful when specifying `ISB = FALSE`. For instance, if all `alpha` parameters are desired **except** for `alpha[1]`, `params = 'alpha', excl = 'alpha\\[1\\]', ISB = FALSE` can be used. Once again, since the `params` argument takes a regular expression, the square brackets must be escaped using `\\`. When `ISB = TRUE`, an exact match of the specified parameter is required (excluding the square brackets). When `ISB = FALSE`, partial names will be matched. Leaving the default (`ISB = TRUE`) is generally recommended for simplicity. These arguments can be used in any of the functions in the package.
 
 ```{r}
 MCMCsummary(MCMC_data, 
           params = 'alpha',
-          excl = 'alpha[1]', 
+          excl = 'alpha\\[1\\]', 
           ISB = FALSE)
 ```
 
@@ -81,7 +83,7 @@ MCMCsummary(MCMC_data,
 
 &nbsp;
 
-The `func` argument can be used to return metrics of interest not already returned by default for `MCMCsummary`. Input is a function to be performed on posteriors for each specified parameter. Values returned by function will be displayed as a column in the summary output (or multiple columns if the function returns more than one value). In this way, functions from other packages can be used to derives metrics of interest on posterior output.
+The `func` argument can be used to return metrics of interest not already returned by default for `MCMCsummary`. Input is a function to be performed on posteriors for each specified parameter. Values returned by function will be displayed as a column in the summary output (or multiple columns if the function returns more than one value). In this way, functions from other packages can be used to derive metrics of interest on posterior output. Column name(s) for function output can be specified with the `func_name` argument.
 
 ```{r}
 MCMCsummary(MCMC_data, 
@@ -94,6 +96,31 @@ MCMCsummary(MCMC_data,
 
 &nbsp;
 
+## MCMCpstr
+
+`MCMCpstr` is used to output summary information from MCMCoutput while preserving the original structure of the specified parameters (i.e., scalar, vector, matrix, array). Function outputs a `list` with calculated values for each specified parameter, similar to output obtained when fitting models with the `jags.samples` function (as opposed to `coda.samples`) from the `rjags` package. Preserving the original strucutre can be helpful when plotting or summarizing parameters with multidimensional structure. Particular parameters of interest can be specified as with other functions with the `params` argument.
+
+The function calculates summary information only for the specified function. The function to be used is specified using the `func` argument.
+
+
+```{r, fig.width=5, fig.height=6}
+MCMCpstr(MCMC_data,
+         params = 'alpha',
+         func = mean)
+```
+
+&nbsp;
+
+
+Custom functions can be specified as well.
+
+```{r, fig.width=5, fig.height=6}
+MCMCpstr(MCMC_data, 
+         func = function(x) quantile(x, probs = 0.01))
+```
+
+&nbsp;
+
 
 ## MCMCtrace
 
@@ -101,7 +128,7 @@ MCMCsummary(MCMC_data,
 
 ```{r, fig.width=5, fig.height=6}
 MCMCtrace(MCMC_data, 
-        params = c('beta[1]', 'beta[2]', 'beta[3]'),
+        params = c('beta\\[1\\]', 'beta\\[2\\]', 'beta\\[3\\]'),
         ISB = FALSE,
         pdf = FALSE)
 ```
@@ -126,7 +153,7 @@ PDF document will be output to the current working directory by default, but ano
 MCMCtrace(MCMC_data, 
         pdf = TRUE, 
         filename = 'MYpdf', 
-        wd = 'DIRECTORY HERE')
+        wd = 'DIRECTORY_HERE')
 ```
 
 &nbsp;
@@ -135,16 +162,30 @@ MCMCtrace(MCMC_data,
 
 ```{r, fig.width=5, fig.height=6}
 MCMCtrace(MCMC_data, 
-        params = c('beta[1]', 'beta[2]', 'beta[3]'),
+        params = c('beta\\[1\\]', 'beta\\[2\\]', 'beta\\[3\\]'),
         ISB = FALSE,
         iter = 1800,
         ind = TRUE,
         pdf = FALSE)
 ```
 
-
 &nbsp;
 
+Overlap between the priors and posteriors can also be calculated by specifying the priors associated with each parameter using the `priors` argument. Ths is particularly useful when investigating how large the effect of the prior is on the posterior distribution - this can be informative when trying to determine how identifiable a particular parameter is in a model.
+
+The `priors` argument takes a matrix as input, with each column representing a prior for a different parameter and each row representing a random draw from that prior distribution. These draws can be generated using R functions such as rnorm, rgamma, runif, etc. Parameters are plotted alphabetically - priors should be sorted accordingly. If the `priors` argument contains only one prior and more than one parameter is specified for the `params` argument, this prior will be used for all parameters. The number of draws for each prior should equal the number of iterations specified by \code{iter} (or total draws if less than \code{iter}) times the number of chains, though the function will automatically adjust if more or fewer iterations are specified. It is important to note that some discrepencies between MCMC samplers and R may exist regarding the parameterization of distributions - one example of this is the use of precision in JAGS but standard deviation in R for the 'second parameter' of the normal distribution.
+
+```{r, fig.width=5, fig.height=6}
+#same prior used for all parameters
+PR <- rnorm(15000, 0, 32) #equivalent to dnorm(0, 0.001) in JAGS
+MCMCtrace(MCMC_data,
+          params = c('beta\\[1\\]', 'beta\\[2\\]', 'beta\\[3\\]'),
+          ISB = FALSE,
+          priors = PR,
+          pdf = FALSE)
+```
+
+&nbsp;
 
 ## MCMCchains
 
@@ -160,6 +201,15 @@ apply(ex, 2, mean)
 
 &nbsp;
 
+Using the `mcmc.list` argument, `MCMCchains` can return an `mcmc.list` object, instead of a matrix, for the specified parameters. This can be useful when saving posterior information for only a subset of parameters is desired.
+
+```{r}
+ex2 <- MCMCchains(MCMC_data, 
+                  params = 'beta', 
+                  mcmc.list = TRUE)
+```
+
+&nbsp;
 
 ## MCMCplot
 
@@ -212,7 +262,7 @@ Graphical parameters for x and y-axis limitation, row labels, title, median dot 
 ```{r, fig.width=5, fig.height=6}
 MCMCplot(MCMC_data, 
        params = 'beta', 
-       xlim = c(-60, 25),
+       xlim = c(-60, 40),
        xlab = 'My x-axis label',
        main = 'MCMCvis plot',
        labels = c('First param', 'Second param', 'Third param', 
@@ -226,6 +276,8 @@ MCMCplot(MCMC_data,
        ax_sz = 4,
        main_text_sz = 2)
 ```
+
+&nbsp;
 
 
 ## References
