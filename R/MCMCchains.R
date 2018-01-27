@@ -16,7 +16,7 @@
 #' @section Details:
 #' Function returns matrix with one chain per column for specified parameters. Multiple input chains for each parameter are combined to one posterior chain. Parameters are arranged in columns alphabetically.
 #'
-#' \code{object} argument can be a \code{stanfit} object (\code{rstan} package), an \code{mcmc.list} object (\code{coda} package), an \code{R2jags} model object (\code{R2jags} package), or a matrix containing MCMC chains (each column representing MCMC output for a single parameter, rows representing iterations in the chain). The function automatically detects the object type and proceeds accordingly.
+#' \code{object} argument can be a \code{stanfit} object (\code{rstan} package), an \code{mcmc.list} object (\code{coda} package), an \code{R2jags} model object (\code{R2jags} package), a \code{jagsUI} model object (\code{jagsUI} package), or a matrix containing MCMC chains (each column representing MCMC output for a single parameter, rows representing iterations in the chain). The function automatically detects the object type and proceeds accordingly.
 #'
 #'
 #' @examples
@@ -64,10 +64,11 @@ MCMCchains <- function(object,
   if(coda::is.mcmc.list(object) != TRUE &
      typeof(object) != 'double' &
      class(object) != 'rjags' &
-     typeof(object) != 'S4')
+     typeof(object) != 'S4' &
+     class(object) != 'jagsUI')
   {
     stop('Invalid object type. Input must be stanfit object (rstan), mcmc.list object (coda),
-         rjags object (R2jags), or matrix with MCMC chains.')
+         rjags object (R2jags), jagsUI object (jagsUI), or matrix with MCMC chains.')
   }
 
   #NAME SORTING BLOCK
@@ -81,6 +82,11 @@ MCMCchains <- function(object,
     }else{
       names <- colnames(temp_in[[1]])
     }
+  }
+
+  if(class(object) == 'jagsUI')
+  {
+    object <- object$samples
   }
 
   if(coda::is.mcmc.list(object) == TRUE)
@@ -121,7 +127,7 @@ MCMCchains <- function(object,
 
   if(class(object[[1]]) == 'mcarray')
   {
-    stop('Invalid object type. jags.samples objects not currently supported. Input must be stanfit object, mcmc.list object, rjags object, or matrix with MCMC chains.')
+    stop('Invalid object type. jags.samples objects not currently supported. Input must be stanfit object, mcmc.list object, rjags object, jagsUI object, or matrix with MCMC chains.')
   }
 
 

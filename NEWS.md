@@ -1,6 +1,14 @@
 NEWS
 ====
 
+0.9.4
+- Fix whitespace issue in `MCMCplot` when many parameters are plotted and large fig dimensions are used
+- Fix label alginment issue in `MCMCplot` when horiz = FALSE and large numbers of parameters are plotted
+
+0.9.3
+- Fix bug that prevented parameters from being sorted when using matrix input for `MCMCtrace`
+- Add support for objects produced with the jagsUI package
+
 0.9.2
 - `MCMCtrace` now takes matrix input (as with the other functions). One chain is assumed when matrix input is used.
 
