@@ -1,6 +1,73 @@
-## ---- message=FALSE------------------------------------------------------
+## ---- eval = FALSE-------------------------------------------------------
+#  library(rjags)
+#  
+#  #create JAGS model
+#  mf <- "
+#  model {
+#  for (i in 1:10)
+#  {
+#    y[i] ~ dnorm(mu, 0.01);
+#  }
+#  mu ~ dnorm(0, 0.01)
+#  }
+#  "
+#  
+#  data <- list(y = rnorm(10))
+#  
+#  jm <- rjags::jags.model(textConnection(mf),
+#                          data = data,
+#                          n.chains = 3)
+#  
+#  jags_out <- rjags::coda.samples(jm,
+#                                   variable.names = 'mu',
+#                                   n.iter = 10)
+
+## ------------------------------------------------------------------------
 library(MCMCvis)
 
+## ---- eval = FALSE-------------------------------------------------------
+#  #plug object directly into package function
+#  MCMCsummary(jags_out)
+
+## ---- eval = FALSE-------------------------------------------------------
+#  ##     mean   sd  2.5%   50% 97.5% Rhat
+#  ## mu -0.98 2.32 -5.45 -0.91  2.82 1.04
+
+## ---- eval = FALSE-------------------------------------------------------
+#  library(rstan)
+#  
+#  #create Stan model
+#  
+#  sm <- "
+#  data {
+#  real y[10];
+#  }
+#  parameters {
+#  real mu;
+#  }
+#  model {
+#  for (i in 1:10)
+#  {
+#    y[i] ~ normal(mu, 10);
+#  }
+#  mu ~ normal(0, 10);
+#  }
+#  "
+#  
+#  stan_out <- stan(model_code = sm,
+#                    data = data,
+#                    iter = 5)
+
+## ---- eval = FALSE-------------------------------------------------------
+#  #plug object directly into package function
+#  MCMCsummary(stan_out)
+
+## ---- eval = FALSE-------------------------------------------------------
+#  ##       mean   sd  2.5%   50% 97.5% Rhat
+#  ## mu    1.69 2.85 -3.43  1.38  5.03 1.54
+#  ## lp__ -0.62 0.51 -1.45 -0.62 -0.09 2.77
+
+## ---- message=FALSE------------------------------------------------------
 data(MCMC_data)
 
 MCMCsummary(MCMC_data)
@@ -59,6 +126,7 @@ MCMCtrace(MCMC_data,
 ## ---- eval=FALSE---------------------------------------------------------
 #  MCMCtrace(MCMC_data,
 #          pdf = TRUE,
+#          open_pdf = FALSE,
 #          filename = 'MYpdf',
 #          wd = 'DIRECTORY_HERE')
 
@@ -66,7 +134,7 @@ MCMCtrace(MCMC_data,
 MCMCtrace(MCMC_data, 
         params = c('beta\\[1\\]', 'beta\\[2\\]', 'beta\\[3\\]'),
         ISB = FALSE,
-        iter = 1800,
+        iter = 100,
         ind = TRUE,
         pdf = FALSE)
 
@@ -77,6 +145,15 @@ MCMCtrace(MCMC_data,
           params = c('beta\\[1\\]', 'beta\\[2\\]', 'beta\\[3\\]'),
           ISB = FALSE,
           priors = PR,
+          pdf = FALSE)
+
+## ---- fig.width=5, fig.height=6------------------------------------------
+#same prior used for all parameters
+GV <- c(-10, -5.5, -15)
+MCMCtrace(MCMC_data,
+          params = c('beta\\[1\\]', 'beta\\[2\\]', 'beta\\[3\\]'),
+          ISB = FALSE,
+          gvals = GV,
           pdf = FALSE)
 
 ## ------------------------------------------------------------------------
@@ -98,8 +175,7 @@ MCMCplot(MCMC_data,
 ## ---- fig.width=5, fig.height=6------------------------------------------
 MCMCplot(MCMC_data, 
        params = 'beta',
-       ref_ovl = FALSE, 
-       ref = NULL)
+       ref_ovl = TRUE)
 
 ## ---- fig.width=5, fig.height=6------------------------------------------
 MCMCplot(MCMC_data, 
@@ -121,9 +197,8 @@ MCMCplot(MCMC_data,
        xlab = 'My x-axis label',
        main = 'MCMCvis plot',
        labels = c('First param', 'Second param', 'Third param', 
-                  'Fourth param', 'Fifth param', 'Sixth param', 
-                  'Seventh param', 'Eighth param', 'Nineth param', 
-                  'Tenth param'), 
+                  'Fourth param', 'Fifth param', 'Sixth param'), 
+       col = 'red',
        labels_sz = 1.5,
        med_sz = 2,
        thick_sz = 7,

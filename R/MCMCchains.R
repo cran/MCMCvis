@@ -31,9 +31,9 @@
 #' ex2 <- MCMCchains(MCMC_data, params = 'beta')
 #' apply(ex2, 2, mean)
 #'
-#' #Just 'beta[1]', 'gamma[4]', and 'alpha[3]'
+#' #Just 'beta[1]', 'beta[4]', and 'alpha[3]'
 #' #'params' takes regular expressions when ISB = FALSE, square brackets must be escaped with '\\'
-#' ex3 <- MCMCchains(MCMC_data, params = c('beta\\[1\\]', 'gamma\\[4\\]', 'alpha\\[3\\]'), ISB = FALSE)
+#' ex3 <- MCMCchains(MCMC_data, params = c('beta\\[1\\]', 'beta\\[4\\]', 'alpha\\[3\\]'), ISB = FALSE)
 #' apply(ex3, 2, sd)
 #'
 #' @export
@@ -67,8 +67,7 @@ MCMCchains <- function(object,
      typeof(object) != 'S4' &
      class(object) != 'jagsUI')
   {
-    stop('Invalid object type. Input must be stanfit object (rstan), mcmc.list object (coda),
-         rjags object (R2jags), jagsUI object (jagsUI), or matrix with MCMC chains.')
+    stop('Invalid object type. Input must be stanfit object (rstan), mcmc.list object (coda), rjags object (R2jags), jagsUI object (jagsUI), or matrix with MCMC chains.')
   }
 
   #NAME SORTING BLOCK
@@ -125,10 +124,6 @@ MCMCchains <- function(object,
     }
   }
 
-  if(class(object[[1]]) == 'mcarray')
-  {
-    stop('Invalid object type. jags.samples objects not currently supported. Input must be stanfit object, mcmc.list object, rjags object, jagsUI object, or matrix with MCMC chains.')
-  }
 
 
   #INDEX BLOCK
@@ -253,7 +248,7 @@ MCMCchains <- function(object,
 
 
   #PROCESSING BLOCK
-  if(coda::is.mcmc.list(object) == TRUE)
+  if(coda::is.mcmc.list(object) == TRUE | typeof(object) == 'S4')
   {
     if(length(f_ind) > 1)
     {
