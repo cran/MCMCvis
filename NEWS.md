@@ -1,6 +1,19 @@
 NEWS
 ====
 
+
+0.10.2:
+
+- `MCMCtrace` now takes `post_zm` as an argument. When `post_zm = FALSE`, x- and y-limits of density plots are scaled so that both the prior and posterior can be visualized on a plot (rather than zoomed on the posterior).
+
+
+0.10.1:
+
+- `MCMCpstr` fix bug to institute rounding when parameters as scalars or vectors
+- `MCMCtrace` now takes `PPO_out` as an argmuent. When `PPO_out = TRUE`, the percent overlap between prior and posterior for each paras will be returned as a dataframe.
+- Add CITATION file
+
+
 0.10.0:
 
 - Fix warning when feeding jags.parallel object to `MCMCsummary`
@@ -17,20 +30,24 @@ NEWS
 - Fix whitespace issue in `MCMCplot` when many parameters are plotted and large fig dimensions are used
 - Fix label alginment issue in `MCMCplot` when `horiz = FALSE` and large numbers of parameters are plotted
 
+
 0.9.3:
 
 - Fix bug that prevented parameters from being sorted when using matrix input for `MCMCtrace`
 - Add support for objects produced with the jagsUI package
 
+
 0.9.2:
 
 - `MCMCtrace` now takes matrix input (as with the other functions). One chain is assumed when matrix input is used.
+
 
 0.9.1:
 
 - Fix bug that produced errors when using the `jags.parallel` function in the `R2jags` package.
 - All functions - when `ISB = FALSE`, `params` argument now takes the form of regular expressions
 - Examples for `MCMCtrace` no longer open up external programs (pdf viewer) per CRAN policy
+
 
 0.9.0:
 
