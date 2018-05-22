@@ -1,21 +1,19 @@
-#' Summary function for MCMC output that preserves parameter structure
+#' Summarize and extract posterior chains from MCMC output while preserving parameter structure
 #'
-#' Extract summary information from MCMC output (specific function specified) for specific parameters of interest while preserving original parameter structure (i.e., scalar, vector, matrix, array). Function outputs a \code{list} with calculated values for each specified parameter.
+#' Extract summary information and posterior chains from MCMC output (specific function specified) for specific parameters of interest while preserving original parameter structure (i.e., scalar, vector, matrix, array). Function outputs a \code{list} with calculated values or posterior chains for each specified parameter.
 #'
 #' @param object Object containing MCMC output. See DETAILS below.
-#' @param params Character string (or vector of character strings) denoting parameters to be returned in summary output.
+#' @param params Character string (or vector of character strings) denoting parameters to be returned in output.
 #'
-#' Default \code{'all'} returns all parameters in summary output.
+#' Default \code{'all'} returns all parameters in output.
 #'
 #' @param excl Character string (or vector of character strings) denoting parameters to exclude. Used in conjunction with \code{params} argument to select parameters of interest.
 #'
 #' @param ISB Ignore Square Brackets (ISB). Logical specifying whether square brackets should be ignored in the \code{params} and \code{excl} arguments. If \code{TRUE}, square brackets are ignored - input from \code{params} and \code{excl} are otherwise matched exactly. If \code{FALSE}, square brackets are not ignored - input from \code{params} and \code{excl} are matched using grep, which can take arguments in regular expression format. This allows partial names to be used when specifying parameters of interest.
 #'
-#' @param digits Number of digits to include for posterior summary. Values will be rounded to the specified number of digits (except for Rhat which is always rounded to 2 digits).
+#' @param func Function to be performed on MCMC output. When output of specified function is greater than length 1, an extra dimension is added. For instance, output of length 3 for a parameter with dimensions 2x2 results in a 2x2x3 output. Functions that produce output with dimensionality greater than 1 are not permitted. \code{func} is ignored when \code{type = 'chains'}.
 #'
-#' Default is \code{digits = 2}.
-#'
-#' @param func Function to be performed on MCMC output. Output of specified function must be of length 1.
+#' @param type Character string specifying whether to return summary information (calculated based on \code{func} argument) or posterior chains. Valid options are \code{'summary'} and \code{'chains'}. When \code{type = 'chains'}, the \code{'func'} argument is ignored. When \code{type = 'chains'}, posterior chains are concatenated and stored in the last dimension in the array for each element (parameter) of the list.
 #'
 #' @section Details:
 #' \code{object} argument can be a \code{stanfit} object (\code{rstan} package), an \code{mcmc.list} object (\code{coda} package), an \code{R2jags} model object (\code{R2jags} package), a \code{jagsUI} model object (\code{jagsUI} package), or a matrix containing MCMC chains (each column representing MCMC output for a single parameter, rows representing iterations in the chain). The function automatically detects the object type and proceeds accordingly.
@@ -24,7 +22,7 @@
 #' #Load data
 #' data(MCMC_data)
 #'
-#' MCMCpstr(MCMC_data, func = function(x) quantile(x, probs = 0.01))
+#' MCMCpstr(MCMC_data, func = function(x) quantile(x, probs = c(0.01, 0.99)))
 #'
 #' @export
 
@@ -32,8 +30,8 @@ MCMCpstr <- function(object,
                    params = 'all',
                    excl = NULL,
                    ISB = TRUE,
-                   digits = 2,
-                   func = mean)
+                   func = mean,
+                   type = 'summary')
 {
   #SORTING BLOCK
   if(typeof(object) == 'double')
@@ -85,7 +83,6 @@ MCMCpstr <- function(object,
     onames <- colnames(temp_in)
   }
 
-
   #create empty list
   out_list <- vector('list', length(un))
 
@@ -96,30 +93,57 @@ MCMCpstr <- function(object,
     ind <- which(un[i] == names)
 
     #determine how many ',' and therefore how many dimensions for parameter
-    dimensions <- length(strsplit(onames[ind[1]], split = ',', fixed = TRUE)[[1]])
-
-    if (length(func(ch_bind[,ind[1]])) > 1)
-    {
-      stop("Output from 'func' argument must be of length 1.")
-    }
+    dims <- length(strsplit(onames[ind[1]], split = ',', fixed = TRUE)[[1]])
 
     #scalar or vector
-    if(dimensions == 1)
+    if (dims == 1)
     {
-      #1 dimension
-      temp_obj <- rep(NA, length(ind))
-      for (j in 1:length(ind))
+      if (type == 'summary')
       {
-        #j <- 1
-        temp_obj[j] <- round(func(ch_bind[,ind[j]]), digits = digits)
+        func_out <- func(ch_bind[,ind[1]])
+        if (length(func_out) > 1)
+        {
+          if (!is.null(dim(func_out)))
+          {
+            stop("Output from 'func' argument must be of dimension 1.")
+          }
+          temp_obj <- matrix(NA, nrow = length(ind), ncol = length(func_out))
+          dimnames(temp_obj)[[2]] <- names(func_out)
+          dimnames(temp_obj)[[1]] <- onames[ind]
+
+          for (j in 1:length(ind))
+          {
+            temp_obj[j,] <- func(ch_bind[,ind[j]])
+          }
+        } else{
+          temp_obj <- rep(NA, length(ind))
+          for (j in 1:length(ind))
+          {
+            temp_obj[j] <- func(ch_bind[,ind[j]])
+          }
+        }
+      }
+      if (type == 'chains')
+      {
+        temp_obj <- matrix(NA, nrow = length(ind), ncol = NROW(ch_bind))
+        dimnames(temp_obj)[[1]] <- onames[ind]
+
+        for (j in 1:length(ind))
+        {
+          temp_obj[j,] <- ch_bind[,ind[j]]
+        }
+      }
+      if (type != 'summary' & type != 'chains')
+      {
+        stop("Invalid input for argument 'type'. Valid options are 'summary' and 'chains'.")
       }
 
       #fill list
       out_list[[i]] <- temp_obj
     }
-    if(dimensions == 2)
+    #2 dimensions
+    if (dims == 2)
     {
-      #2 dimensions
       pnames <- vapply(strsplit(onames[ind],
                                 '[', fixed = TRUE), `[`, 2, FUN.VALUE=character(1))
       pnames2 <- vapply(strsplit(pnames,
@@ -138,20 +162,55 @@ MCMCpstr <- function(object,
         CI <- c(CI, ci)
       }
 
-      #create blank matrix
-      temp_obj <- matrix(NA, nrow = max(RI), ncol = max(CI))
-
-      for (j in 1:length(ind))
+      if (type == 'summary')
       {
-        temp_obj[RI[j], CI[j]] <- round(func(ch_bind[,ind[j]]), digits = digits)
+        func_out <- func(ch_bind[,ind[1]])
+        if (length(func_out) > 1)
+        {
+          if (!is.null(dim(func_out)))
+          {
+            stop("Output from 'func' argument must be of dimension 1.")
+          }
+          #create blank array
+          temp_obj <- array(NA, dim = c(max(RI), max(CI), length(func_out)))
+          dimnames(temp_obj)[[3]] <- names(func_out)
+
+          for (j in 1:length(ind))
+          {
+            #j <- 1
+            temp_obj[RI[j], CI[j], ] <- func(ch_bind[,ind[j]])
+          }
+        } else {
+          #create blank matrix
+          temp_obj <- matrix(NA, nrow = max(RI), ncol = max(CI))
+
+          for (j in 1:length(ind))
+          {
+            temp_obj[RI[j], CI[j]] <- func(ch_bind[,ind[j]])
+          }
+        }
+      }
+      if (type == 'chains')
+      {
+        #create blank array
+        temp_obj <- array(NA, dim = c(max(RI), max(CI), NROW(ch_bind)))
+
+        for (j in 1:length(ind))
+        {
+          temp_obj[RI[j], CI[j], ] <- ch_bind[,ind[j]]
+        }
+      }
+      if (type != 'summary' & type != 'chains')
+      {
+        stop("Invalid input for argument 'type'. Valid options are 'summary' and 'chains'.")
       }
 
       #fill list
       out_list[[i]] <- temp_obj
     }
-    if(dimensions == 3)
+    #3 dimensions
+    if (dims == 3)
     {
-      #3 dimensions
       pnames <- vapply(strsplit(onames[ind],
                                 '[', fixed = TRUE), `[`, 2, FUN.VALUE=character(1))
       pnames2 <- vapply(strsplit(pnames,
@@ -173,20 +232,55 @@ MCMCpstr <- function(object,
         TI <- c(TI, ti)
       }
 
-      #create blank array
-      temp_obj <- array(NA, dim = c(max(RI), max(CI), max(TI)))
-
-      for (j in 1:length(ind))
+      if (type == 'summary')
       {
-        temp_obj[RI[j], CI[j], TI[j]] <- round(func(ch_bind[,ind[j]]), digits = digits)
+        func_out <- func(ch_bind[,ind[1]])
+        if (length(func_out) > 1)
+        {
+          if (!is.null(dim(func_out)))
+          {
+            stop("Output from 'func' argument must be of dimension 1.")
+          }
+          #create blank array
+          temp_obj <- array(NA, dim = c(max(RI), max(CI), max(TI), length(func_out)))
+          dimnames(temp_obj)[[4]] <- names(func_out)
+
+          for (j in 1:length(ind))
+          {
+            #j <- 1
+            temp_obj[RI[j], CI[j], TI[j], ] <- func(ch_bind[,ind[j]])
+          }
+        } else {
+          #create blank array
+          temp_obj <- array(NA, dim = c(max(RI), max(CI), max(TI)))
+
+          for (j in 1:length(ind))
+          {
+            temp_obj[RI[j], CI[j], TI[j]] <- func(ch_bind[,ind[j]])
+          }
+        }
+      }
+      if (type == 'chains')
+      {
+        #create blank array
+        temp_obj <- array(NA, dim = c(max(RI), max(CI), max(TI), NROW(ch_bind)))
+
+        for (j in 1:length(ind))
+        {
+          temp_obj[RI[j], CI[j], TI[j], ] <- ch_bind[,ind[j]]
+        }
+      }
+      if (type != 'summary' & type != 'chains')
+      {
+        stop("Invalid input for argument 'type'. Valid options are 'summary' and 'chains'.")
       }
 
       #fill list
       out_list[[i]] <- temp_obj
     }
-    if(dimensions == 4)
+    #4 dimensions
+    if (dims == 4)
     {
-      #4 dimensions
       pnames <- vapply(strsplit(onames[ind],
                                 '[', fixed = TRUE), `[`, 2, FUN.VALUE=character(1))
       pnames2 <- vapply(strsplit(pnames,
@@ -211,18 +305,53 @@ MCMCpstr <- function(object,
         FI <- c(FI, fi)
       }
 
-      #create blank array
-      temp_obj <- array(NA, dim = c(max(RI), max(CI), max(TI), max(FI)))
-
-      for (j in 1:length(ind))
+      if (type == 'summary')
       {
-        temp_obj[RI[j], CI[j], TI[j], FI[j]] <- round(func(ch_bind[,ind[j]]), digits = digits)
+        func_out <- func(ch_bind[,ind[1]])
+        if (length(func_out) > 1)
+        {
+          if (!is.null(dim(func_out)))
+          {
+            stop("Output from 'func' argument must be of dimension 1.")
+          }
+          #create blank array
+          temp_obj <- array(NA, dim = c(max(RI), max(CI), max(TI), max(FI), length(func_out)))
+          dimnames(temp_obj)[[5]] <- names(func_out)
+
+          for (j in 1:length(ind))
+          {
+            #j <- 1
+            temp_obj[RI[j], CI[j], TI[j], FI[j], ] <- func(ch_bind[,ind[j]])
+          }
+        } else {
+          #create blank array
+          temp_obj <- array(NA, dim = c(max(RI), max(CI), max(TI), max(FI)))
+
+          for (j in 1:length(ind))
+          {
+            temp_obj[RI[j], CI[j], TI[j], FI[j]] <- func(ch_bind[,ind[j]])
+          }
+        }
+      }
+      if (type == 'chains')
+      {
+        #create blank array
+        temp_obj <- array(NA, dim = c(max(RI), max(CI), max(TI), max(FI), NROW(ch_bind)))
+
+        for (j in 1:length(ind))
+        {
+          temp_obj[RI[j], CI[j], TI[j], FI[j], ] <- ch_bind[,ind[j]]
+        }
+      }
+      if (type != 'summary' & type != 'chains')
+      {
+        stop("Invalid input for argument 'type'. Valid options are 'summary' and 'chains'.")
       }
 
       #fill list
       out_list[[i]] <- temp_obj
     }
-    if(dimensions > 4)
+    if(dims > 4)
     {
       stop('This function does not currently support parameters with > 4 dimensions. If you have a need for this functionality, please put in a bug report on the package Github page.')
     }

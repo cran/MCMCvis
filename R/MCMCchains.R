@@ -13,6 +13,8 @@
 #'
 #' @param mcmc.list Logical specifying whether to return an mcmc.list. If \code{TRUE}, an \code{mcmc.list} object is returned, rather than a matrix.
 #'
+#' @param chain_num Numeric - specifies posterior chain number. When a value is specified, posterior for only that chain is output. Useful for determining the last iteration for each parameter, to be used as initial values in a subsequent model, to effectively 'continue' a model run.
+#'
 #' @section Details:
 #' Function returns matrix with one chain per column for specified parameters. Multiple input chains for each parameter are combined to one posterior chain. Parameters are arranged in columns alphabetically.
 #'
@@ -42,7 +44,8 @@ MCMCchains <- function(object,
                      params = 'all',
                      excl = NULL,
                      ISB = TRUE,
-                     mcmc.list = FALSE)
+                     mcmc.list = FALSE,
+                     chain_num = NULL)
 {
   if(length(class(object)) > 1)
   {
@@ -124,8 +127,6 @@ MCMCchains <- function(object,
     }
   }
 
-
-
   #INDEX BLOCK
   #exclusions
   if(!is.null(excl))
@@ -137,22 +138,33 @@ MCMCchains <- function(object,
       {
         n_excl <- vapply(strsplit(excl,
                                   split = "[", fixed = TRUE), `[`, 1, FUN.VALUE=character(1))
-        rm_ind <- c(rm_ind, which(names %in% n_excl[i]))
+        ind_excl <- which(names %in% n_excl[i])
+        if(length(ind_excl) < 1)
+        {
+          warning(paste0('"', excl[i], '"', ' not found in MCMC output.'))
+        }
+        rm_ind <- c(rm_ind, ind_excl)
       }else{
         n_excl <- excl
-        rm_ind <- c(rm_ind, grep(n_excl[i], names, fixed = FALSE))
+        ind_excl <- grep(n_excl[i], names, fixed = FALSE)
+        if(length(ind_excl) < 1)
+        {
+          warning(paste0('"', excl[i], '"', ' not found in MCMC output.'))
+        }
+        rm_ind <- c(rm_ind, ind_excl)
       }
     }
-    if(length(rm_ind) < 1)
+    if(length(rm_ind) > 0)
     {
-      stop(paste0('"', excl, '"', ' not found in MCMC ouput.'))
-    }
-    dups <- which(duplicated(rm_ind))
-    if(length(dups) > 0)
-    {
-      rm_ind2 <- rm_ind[-dups]
+      dups <- which(duplicated(rm_ind))
+      if(length(dups) > 0)
+      {
+        rm_ind2 <- rm_ind[-dups]
+      }else{
+        rm_ind2 <- rm_ind
+      }
     }else{
-      rm_ind2 <- rm_ind
+      excl <- NULL
     }
   }
 
@@ -177,7 +189,7 @@ MCMCchains <- function(object,
 
       if (length(get_ind) < 1)
       {
-        stop(paste0('"', params, '"', ' not found in MCMC ouput.'))
+        stop(paste0('"', params, '"', ' not found in MCMC output.'))
       }
       if(!is.null(excl))
       {
@@ -209,7 +221,8 @@ MCMCchains <- function(object,
 
       if (length(get_ind) < 1)
       {
-        stop(paste0('"', params[i], '"', ' not found in MCMC ouput.'))
+        warning(paste0('"', params[i], '"', ' not found in MCMC output.'))
+        next()
       }
       grouped <- c(grouped, get_ind)
     }
@@ -246,33 +259,85 @@ MCMCchains <- function(object,
     }
   }
 
-
   #PROCESSING BLOCK
-  if(coda::is.mcmc.list(object) == TRUE | typeof(object) == 'S4')
+  if (is.null(chain_num))
   {
-    if(length(f_ind) > 1)
+    if(coda::is.mcmc.list(object) == TRUE | typeof(object) == 'S4')
     {
-      dsort <- do.call(coda::mcmc.list, temp_in[,f_ind])
-      OUT <- do.call('rbind', dsort)
-    }else{
-      dsort <- do.call(coda::mcmc.list, temp_in[,f_ind, drop = FALSE])
-      OUT <- as.matrix(do.call(coda::mcmc.list, temp_in[,f_ind, drop = FALSE]), ncol = 1)
+      if(length(f_ind) > 1)
+      {
+        dsort_mcmc <- do.call(coda::mcmc.list, temp_in[,f_ind])
+        OUT <- do.call('rbind', dsort_mcmc)
+      }else{
+        dsort_mcmc <- do.call(coda::mcmc.list, temp_in[,f_ind, drop = FALSE])
+        OUT <- as.matrix(do.call(coda::mcmc.list, temp_in[,f_ind, drop = FALSE]), ncol = 1)
+      }
+    }
+    if(typeof(object) == 'double')
+    {
+      OUT <- temp_in[,f_ind, drop = FALSE]
+      if(mcmc.list == TRUE)
+      {
+        stop('Cannot produce mcmc.list output with matrix input')
+      }
+    }
+
+    if(class(object) == 'rjags')
+    {
+      OUT <- temp_in[,f_ind, drop = FALSE]
+      if(mcmc.list == TRUE)
+      {
+        #modified coda::as.mcmc (removing ordering of param names)
+        x <- object$BUGSoutput
+        mclist <- vector("list", x$n.chains)
+        mclis <- vector("list", x$n.chains)
+        strt <- x$n.burnin + 1
+        end <- x$n.iter
+        ord <- dimnames(x$sims.array)[[3]]
+        for (i in 1:x$n.chains)
+        {
+          tmp1 <- x$sims.array[, i, ord]
+          mclis[[i]] <- coda::mcmc(tmp1, start = strt, end = end, thin = x$n.thin)
+        }
+        temp2 <- coda::as.mcmc.list(mclis)
+        #end mod as.mcmc
+        dsort_mcmc <- do.call(coda::mcmc.list, temp2[,f_ind, drop = FALSE])
+      }
     }
   }
 
-  if(typeof(object) == 'double')
+  if (!is.null(chain_num))
   {
-    OUT <- temp_in[,f_ind, drop = FALSE]
-    if(mcmc.list == TRUE)
+    if(coda::is.mcmc.list(object) == TRUE | typeof(object) == 'S4')
     {
-      stop('Cannot produce mcmc.list output with matrix input')
-    }
-  }
+      if(length(f_ind) > 1)
+      {
+        dsort <- do.call(coda::mcmc.list, temp_in[,f_ind])
 
-  if(class(object) == 'rjags')
-  {
-    OUT <- temp_in[,f_ind, drop = FALSE]
-    if(mcmc.list == TRUE)
+        if (chain_num > length(dsort))
+        {
+          stop('Invalid value for chain_num specified.')
+        }
+        dsort_mcmc <- dsort[[chain_num]]
+        OUT <- as.matrix(dsort_mcmc)
+      }else{
+        dsort <- do.call(coda::mcmc.list, temp_in[,f_ind, drop = FALSE])
+
+        if (chain_num > length(dsort))
+        {
+          stop('Invalid value for chain_num specified.')
+        }
+        dsort_mcmc <- dsort[[chain_num]]
+        OUT <- as.matrix(dsort_mcmc)
+      }
+    }
+
+    if(typeof(object) == 'double')
+    {
+      stop('Cannot extract posterior information for individual chains from matrix input.')
+    }
+
+    if(class(object) == 'rjags')
     {
       #modified coda::as.mcmc (removing ordering of param names)
       x <- object$BUGSoutput
@@ -289,6 +354,12 @@ MCMCchains <- function(object,
       temp2 <- coda::as.mcmc.list(mclis)
       #end mod as.mcmc
       dsort <- do.call(coda::mcmc.list, temp2[,f_ind, drop = FALSE])
+      if (chain_num > length(dsort))
+      {
+        stop('Invalid value for chain_num specified.')
+      }
+      dsort_mcmc <- dsort[[chain_num]]
+      OUT <- as.matrix(dsort_mcmc)
     }
   }
 
@@ -296,10 +367,9 @@ MCMCchains <- function(object,
   {
     return(OUT)
   }
-
   if(mcmc.list == TRUE)
   {
-    return(dsort)
+    return(dsort_mcmc)
   }
 }
 

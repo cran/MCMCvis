@@ -27,11 +27,11 @@ library(MCMCvis)
 
 ## ---- eval = FALSE-------------------------------------------------------
 #  #plug object directly into package function
-#  MCMCsummary(jags_out)
+#  MCMCsummary(jags_out, round = 2)
 
 ## ---- eval = FALSE-------------------------------------------------------
 #  ##     mean   sd  2.5%   50% 97.5% Rhat
-#  ## mu -0.98 2.32 -5.45 -0.91  2.82 1.04
+#  ## mu -0.67 2.95 -6.03 -0.75  4.01 1.19
 
 ## ---- eval = FALSE-------------------------------------------------------
 #  library(rstan)
@@ -60,38 +60,46 @@ library(MCMCvis)
 
 ## ---- eval = FALSE-------------------------------------------------------
 #  #plug object directly into package function
-#  MCMCsummary(stan_out)
+#  MCMCsummary(stan_out, round = 2)
 
 ## ---- eval = FALSE-------------------------------------------------------
 #  ##       mean   sd  2.5%   50% 97.5% Rhat
-#  ## mu    1.69 2.85 -3.43  1.38  5.03 1.54
-#  ## lp__ -0.62 0.51 -1.45 -0.62 -0.09 2.77
+#  ## mu   -0.26 2.82 -4.49 -0.62  4.45 0.94
+#  ## lp__ -0.44 0.50 -1.47 -0.30 -0.04 1.21
 
 ## ---- message=FALSE------------------------------------------------------
 data(MCMC_data)
 
 MCMCsummary(MCMC_data)
 
+## ---- message=FALSE------------------------------------------------------
+
+MCMCsummary(MCMC_data, round = 2)
+
 ## ------------------------------------------------------------------------
 MCMCsummary(MCMC_data, 
-          params = 'alpha')
+          params = 'alpha', 
+          digits = 2)
 
 ## ------------------------------------------------------------------------
 MCMCsummary(MCMC_data, 
           params = 'alpha\\[1\\]', 
-          ISB = FALSE)
+          ISB = FALSE,
+          round = 2)
 
 ## ------------------------------------------------------------------------
 MCMCsummary(MCMC_data, 
           params = 'alpha',
           excl = 'alpha\\[1\\]', 
-          ISB = FALSE)
+          ISB = FALSE,
+          round = 2)
 
 ## ------------------------------------------------------------------------
 MCMCsummary(MCMC_data, 
           params = 'alpha',
           Rhat = TRUE,
-          n.eff = TRUE)
+          n.eff = TRUE,
+          round = 2)
 
 ## ------------------------------------------------------------------------
 MCMCsummary(MCMC_data, 
@@ -99,16 +107,23 @@ MCMCsummary(MCMC_data,
           Rhat = TRUE,
           n.eff = TRUE,
           func = function(x) quantile(x, probs = c(0.01, 0.99)),
-          func_name = c('1%', '99%'))
+          func_name = c('1%', '99%'),
+          round = 2)
 
 ## ---- fig.width=5, fig.height=6------------------------------------------
 MCMCpstr(MCMC_data,
          params = 'alpha',
-         func = mean)
+         func = mean,
+         type = 'summary')
 
 ## ---- fig.width=5, fig.height=6------------------------------------------
 MCMCpstr(MCMC_data, 
-         func = function(x) quantile(x, probs = 0.01))
+         func = function(x) quantile(x, probs = c(0.01, 0.99)))
+
+## ------------------------------------------------------------------------
+ex <- MCMCpstr(MCMC_data, type = 'chains')
+
+dim(ex$alpha)
 
 ## ---- fig.width=5, fig.height=6------------------------------------------
 MCMCtrace(MCMC_data, 
@@ -146,6 +161,19 @@ MCMCtrace(MCMC_data,
           ISB = FALSE,
           priors = PR,
           pdf = FALSE)
+
+## ---- fig.width=5, fig.height=6------------------------------------------
+#same prior used for all parameters
+PR <- rnorm(15000, 0, 32) #equivalent to dnorm(0, 0.001) in JAGS
+PPO <- MCMCtrace(MCMC_data, 
+                 params = c('beta\\[1\\]', 'beta\\[2\\]', 'beta\\[3\\]'),
+                 ISB = FALSE,
+                 priors = PR,
+                 pdf = FALSE,
+                 post_zm = FALSE,
+                 PPO_out = TRUE)
+
+PPO
 
 ## ---- fig.width=5, fig.height=6------------------------------------------
 #generating values for each parameter used to simulate data
