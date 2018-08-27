@@ -126,7 +126,13 @@ MCMCpstr <- function(object,
       if (type == 'chains')
       {
         temp_obj <- matrix(NA, nrow = length(ind), ncol = NROW(ch_bind))
-        dimnames(temp_obj)[[1]] <- onames[ind]
+
+        if (NROW(temp_obj) > 1)
+        {
+          dimnames(temp_obj)[[1]] <- onames[ind]
+        } else {
+          rownames(temp_obj) <- onames[ind]
+        }
 
         for (j in 1:length(ind))
         {
@@ -353,7 +359,7 @@ MCMCpstr <- function(object,
     }
     if(dims > 4)
     {
-      stop('This function does not currently support parameters with > 4 dimensions. If you have a need for this functionality, please put in a bug report on the package Github page.')
+      stop('This function does not currently support parameters with > 4 dimensions. If you have a need for this functionality, please create an "issue" at https://github.com/caseyyoungflesh/MCMCvis.')
     }
   }
 

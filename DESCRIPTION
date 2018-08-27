@@ -1,7 +1,7 @@
 Package: MCMCvis
 Type: Package
 Title: Tools to Visualize, Manipulate, and Summarize MCMC Output
-Version: 0.11.0
+Version: 0.11.2
 Authors@R: c(
     person("Casey", "Youngflesh", role = c("aut", "cre"), email = "caseyyoungflesh@gmail.com", comment = c(ORCID = "0000-0001-6343-3311")),
     person("Christian", "Che-Castaldo", role = c("ctb")),
@@ -14,13 +14,14 @@ BugReports: http://github.com/caseyyoungflesh/MCMCvis/issues
 LazyData: TRUE
 Imports: coda, rstan, grDevices, graphics, stats, overlapping
 Depends: R (>= 3.3.0)
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
 Suggests: knitr, rmarkdown, testthat
 VignetteBuilder: knitr
+Encoding: UTF-8
 NeedsCompilation: no
-Packaged: 2018-05-21 22:52:51 UTC; caseyyoungflesh
-Author: Casey Youngflesh [aut, cre] (<https://orcid.org/0000-0001-6343-3311>>),
+Packaged: 2018-08-27 19:31:45 UTC; caseyyoungflesh
+Author: Casey Youngflesh [aut, cre] (<https://orcid.org/0000-0001-6343-3311>),
   Christian Che-Castaldo [ctb],
   Tyler Hardy [ctb]
 Repository: CRAN
-Date/Publication: 2018-05-22 03:04:59 UTC
+Date/Publication: 2018-08-27 19:44:31 UTC

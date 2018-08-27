@@ -1,6 +1,17 @@
 NEWS
 ====
 
+0.11.2
+- `MCMCplot` now takes `guide_axis` argument. If `TRUE`, a second axis (x-axis if `HORIZ = TRUE`, y-axis if `HORIZ = FALSE`) is plotted to help interpret values on plot.
+
+
+0.11.1:
+
+- `MCMCchains` now assigns arbitrary names to columns (parameters) when input type is matrix (along with a warning that it is doing so)
+- `MCMCtrace` now modifies the layout of trace plots when < 6 plots are generated
+- `MCMCpstr` fix bug that prevented scalars when type = 'chains'
+
+
 0.11.0:
 
 - `MCMCsummary` `digits` argument is now NULL by default (all computed digits are returned upon default - any rounding must be explicitly specified)
