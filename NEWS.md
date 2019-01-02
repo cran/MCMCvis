@@ -1,7 +1,38 @@
 NEWS
 ====
 
-0.11.2
+0.12.0:
+
+- `MCMCsummary` For `stanfit` objects (model output derived from Stan) Rhat and n_eff are calculated using the `rstan` package. Note that `rstan` calculates Rhat and n_eff values slightly differently (more conservatively) than the `coda` package (commonly used to summarize model output derived from JAGS).
+- `MCMCplot` the following argument names have been changed: 
+    orig: `labels_sz`, new: `sz_labels`
+    orig: `med_sz`, new: `sz_med`
+    orig: `thick_sz`, new: `sz_thick`
+    orig: `thin_sz`, new: `sz_thin`
+    orig: `ax_sz`, new: `sz_axis`
+    orig: `axis_text_sz`, new: `sz_ax_txt`
+    orig: `ax_sz`, new: `sz_ax`
+    orig: `tick_text_sz`, new: `sz_tick_txt`
+    orig: `main_text_sz`, new: `sz_main_txt`
+    orig: `tick_pos`, new: `pos_tick`
+- `MCMCtrace` add ability to specify xlim and ylim for density plots
+- `MCMCtrace` add ability to specify xlab and ylab for density and trace plots
+- `MCMCtrace` add ability to specify title for trace and density plot
+- `MCMCtrace` add ability to specify line width and line type for density and prior lines on density plots
+- `MCMCtrace` add ability to specify color for density and priors lines on density plots
+- `MCMCtrace` add ability to specify size and color of text when priors specified, and the position of ticks for density and trace plots
+- `MCMCtrace` add ability to specify size of tick labels, axes labels, and thickness of axes
+- `MCMCtrace` clean up plotting of trace plots when only two plots are plotted in window
+- `MCMCtrace` add ability to include Rhat and number of effective samples on trace plots
+
+
+0.11.3:
+
+- `MCMCchains` fix error associated with coda::mcmc and `rjags` objects
+
+
+0.11.2:
+
 - `MCMCplot` now takes `guide_axis` argument. If `TRUE`, a second axis (x-axis if `HORIZ = TRUE`, y-axis if `HORIZ = FALSE`) is plotted to help interpret values on plot.
 
 

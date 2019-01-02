@@ -53,18 +53,16 @@ MCMCchains <- function(object,
     x <- object$BUGSoutput
     mclist <- vector("list", x$n.chains)
     mclis <- vector("list", x$n.chains)
-    strt <- x$n.burnin + 1
-    end <- x$n.iter
     ord <- dimnames(x$sims.array)[[3]]
     for (i in 1:x$n.chains)
     {
       tmp1 <- x$sims.array[, i, ord]
-      mclis[[i]] <- coda::mcmc(tmp1, start = strt, end = end, thin = x$n.thin)
+      mclis[[i]] <- coda::mcmc(tmp1, thin = x$n.thin)
     }
     object <- coda::as.mcmc.list(mclis)
     #end mod as.mcmc
   }
-  if(coda::is.mcmc.list(object) != TRUE &
+  if (coda::is.mcmc.list(object) != TRUE &
      typeof(object) != 'double' &
      class(object) != 'rjags' &
      typeof(object) != 'S4' &
@@ -74,19 +72,19 @@ MCMCchains <- function(object,
   }
 
   #NAME SORTING BLOCK
-  if(typeof(object) == 'S4')
+  if (typeof(object) == 'S4')
   {
     temp_in <- rstan::As.mcmc.list(object)
-    if(ISB == TRUE)
+    if (ISB == TRUE)
     {
       names <- vapply(strsplit(colnames(temp_in[[1]]),
                                split = "[", fixed = TRUE), `[`, 1, FUN.VALUE=character(1))
-    }else{
+    } else{
       names <- colnames(temp_in[[1]])
     }
   }
 
-  if(class(object) == 'jagsUI')
+  if (class(object) == 'jagsUI')
   {
     object <- object$samples
   }
@@ -298,13 +296,11 @@ MCMCchains <- function(object,
         x <- object$BUGSoutput
         mclist <- vector("list", x$n.chains)
         mclis <- vector("list", x$n.chains)
-        strt <- x$n.burnin + 1
-        end <- x$n.iter
         ord <- dimnames(x$sims.array)[[3]]
         for (i in 1:x$n.chains)
         {
           tmp1 <- x$sims.array[, i, ord]
-          mclis[[i]] <- coda::mcmc(tmp1, start = strt, end = end, thin = x$n.thin)
+          mclis[[i]] <- coda::mcmc(tmp1, thin = x$n.thin)
         }
         temp2 <- coda::as.mcmc.list(mclis)
         #end mod as.mcmc
@@ -350,13 +346,11 @@ MCMCchains <- function(object,
       x <- object$BUGSoutput
       mclist <- vector("list", x$n.chains)
       mclis <- vector("list", x$n.chains)
-      strt <- x$n.burnin + 1
-      end <- x$n.iter
       ord <- dimnames(x$sims.array)[[3]]
       for (i in 1:x$n.chains)
       {
         tmp1 <- x$sims.array[, i, ord]
-        mclis[[i]] <- coda::mcmc(tmp1, start = strt, end = end, thin = x$n.thin)
+        mclis[[i]] <- coda::mcmc(tmp1, thin = x$n.thin)
       }
       temp2 <- coda::as.mcmc.list(mclis)
       #end mod as.mcmc

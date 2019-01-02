@@ -20,7 +20,7 @@
 #  
 #  jags_out <- rjags::coda.samples(jm,
 #                                   variable.names = 'mu',
-#                                   n.iter = 10)
+#                                   n.iter = 500)
 
 ## ------------------------------------------------------------------------
 library(MCMCvis)
@@ -31,7 +31,7 @@ library(MCMCvis)
 
 ## ---- eval = FALSE-------------------------------------------------------
 #  ##     mean   sd  2.5%   50% 97.5% Rhat
-#  ## mu -0.67 2.95 -6.03 -0.75  4.01 1.19
+#  ## mu -0.46 3.09 -6.32 -0.51  5.44    1
 
 ## ---- eval = FALSE-------------------------------------------------------
 #  library(rstan)
@@ -56,7 +56,7 @@ library(MCMCvis)
 #  
 #  stan_out <- stan(model_code = sm,
 #                    data = data,
-#                    iter = 5)
+#                    iter = 500)
 
 ## ---- eval = FALSE-------------------------------------------------------
 #  #plug object directly into package function
@@ -64,8 +64,8 @@ library(MCMCvis)
 
 ## ---- eval = FALSE-------------------------------------------------------
 #  ##       mean   sd  2.5%   50% 97.5% Rhat
-#  ## mu   -0.26 2.82 -4.49 -0.62  4.45 0.94
-#  ## lp__ -0.44 0.50 -1.47 -0.30 -0.04 1.21
+#  ## mu   -0.48 2.91 -6.07 -0.35  5.39 1.01
+#  ## lp__ -0.56 0.68 -2.42 -0.28 -0.09 1.00
 
 ## ---- message=FALSE------------------------------------------------------
 data(MCMC_data)
@@ -160,7 +160,9 @@ MCMCtrace(MCMC_data,
           params = c('beta\\[1\\]', 'beta\\[2\\]', 'beta\\[3\\]'),
           ISB = FALSE,
           priors = PR,
-          pdf = FALSE)
+          pdf = FALSE,
+          Rhat = TRUE,
+          n.eff = TRUE)
 
 ## ---- fig.width=5, fig.height=6------------------------------------------
 #same prior used for all parameters
@@ -174,6 +176,28 @@ PPO <- MCMCtrace(MCMC_data,
                  PPO_out = TRUE)
 
 PPO
+
+## ---- fig.width=5, fig.height=6------------------------------------------
+#same prior used for all parameters
+PR <- rnorm(15000, 0, 32) #equivalent to dnorm(0, 0.001) in JAGS
+MCMCtrace(MCMC_data,
+          params = c('beta\\[1\\]', 'beta\\[2\\]', 'beta\\[3\\]'),
+          ISB = FALSE,
+          priors = PR,
+          pdf = FALSE,
+          Rhat = TRUE,
+          n.eff = TRUE,
+          xlab_tr = 'This is the x for trace',
+          ylab_tr = 'This is the y for trace',
+          main_den = 'Custom density title',
+          lwd_den = 3,
+          lty_pr = 2,
+          col_pr = 'green',
+          sz_txt = 1.3,
+          sz_ax = 2,
+          sz_ax_txt = 1.2,
+          sz_tick_txt = 1.2,
+          sz_main_txt = 1.3)
 
 ## ---- fig.width=5, fig.height=6------------------------------------------
 #generating values for each parameter used to simulate data
@@ -227,10 +251,10 @@ MCMCplot(MCMC_data,
        labels = c('First param', 'Second param', 'Third param', 
                   'Fourth param', 'Fifth param', 'Sixth param'), 
        col = 'red',
-       labels_sz = 1.5,
-       med_sz = 2,
-       thick_sz = 7,
-       thin_sz = 3,
-       ax_sz = 4,
-       main_text_sz = 2)
+       sz_labels = 1.5,
+       sz_med = 2,
+       sz_thick = 7,
+       sz_thin = 3,
+       sz_ax = 4,
+       sz_main_txt = 2)
 
