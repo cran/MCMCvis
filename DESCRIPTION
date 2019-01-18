@@ -1,7 +1,7 @@
 Package: MCMCvis
 Type: Package
 Title: Tools to Visualize, Manipulate, and Summarize MCMC Output
-Version: 0.12.0
+Version: 0.12.1
 Authors@R: c(
     person("Casey", "Youngflesh", role = c("aut", "cre"), email = "caseyyoungflesh@gmail.com", comment = c(ORCID = "0000-0001-6343-3311")),
     person("Christian", "Che-Castaldo", role = c("ctb")),
@@ -19,9 +19,9 @@ Suggests: knitr, rmarkdown, testthat
 VignetteBuilder: knitr
 Encoding: UTF-8
 NeedsCompilation: no
-Packaged: 2019-01-02 17:23:25 UTC; caseyyoungflesh
+Packaged: 2019-01-18 18:26:36 UTC; caseyyoungflesh
 Author: Casey Youngflesh [aut, cre] (<https://orcid.org/0000-0001-6343-3311>),
   Christian Che-Castaldo [ctb],
   Tyler Hardy [ctb]
 Repository: CRAN
-Date/Publication: 2019-01-02 18:10:03 UTC
+Date/Publication: 2019-01-18 18:50:03 UTC
