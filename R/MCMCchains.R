@@ -16,9 +16,9 @@
 #' @param chain_num Numeric - specifies posterior chain number. When a value is specified, posterior for only that chain is output. Useful for determining the last iteration for each parameter, to be used as initial values in a subsequent model, to effectively 'continue' a model run.
 #'
 #' @section Details:
-#' Function returns matrix with one chain per column for specified parameters. Multiple input chains for each parameter are combined to one posterior chain. Parameters are arranged in columns alphabetically.
+#' Function returns matrix with one parameter per column (for specified parameters). Each iteration is represented as a row. Multiple chains for each parameter are combined to one posterior chain (unless \code{chain_num} is specified, in which case only the specified chain will be returned). Parameters are arranged in columns alphabetically.
 #'
-#' \code{object} argument can be a \code{stanfit} object (\code{rstan} package), an \code{mcmc.list} object (\code{coda} package), an \code{R2jags} model object (\code{R2jags} package), a \code{jagsUI} model object (\code{jagsUI} package), or a matrix containing MCMC chains (each column representing MCMC output for a single parameter, rows representing iterations in the chain). The function automatically detects the object type and proceeds accordingly.
+#' \code{object} argument can be a \code{stanfit} object (\code{rstan} package), a \code{stanreg} object (\code{rstanarm} package), a \code{brmsfit} object (\code{brms} package), an \code{mcmc.list} object (\code{coda} package), an \code{R2jags} model object (\code{R2jags} package), a \code{jagsUI} model object (\code{jagsUI} package), or a matrix containing MCMC chains (each column representing MCMC output for a single parameter, rows representing iterations in the chain). The function automatically detects the object type and proceeds accordingly.
 #'
 #'
 #' @examples
@@ -47,34 +47,56 @@ MCMCchains <- function(object,
                      mcmc.list = FALSE,
                      chain_num = NULL)
 {
-  if(length(class(object)) > 1)
+  if (length(class(object)) > 1)
   {
-    #modified coda::as.mcmc (removing ordering of param names)
-    x <- object$BUGSoutput
-    mclist <- vector("list", x$n.chains)
-    mclis <- vector("list", x$n.chains)
-    ord <- dimnames(x$sims.array)[[3]]
-    for (i in 1:x$n.chains)
+    #if from R2jags::jags.parallel
+    if (class(object)[1] == 'rjags.parallel')
     {
-      tmp1 <- x$sims.array[, i, ord]
-      mclis[[i]] <- coda::mcmc(tmp1, thin = x$n.thin)
+      #modified coda::as.mcmc (removing ordering of param names)
+      x <- object$BUGSoutput
+      mclist <- vector("list", x$n.chains)
+      mclis <- vector("list", x$n.chains)
+      ord <- dimnames(x$sims.array)[[3]]
+      for (i in 1:x$n.chains)
+      {
+        tmp1 <- x$sims.array[, i, ord]
+        mclis[[i]] <- coda::mcmc(tmp1, thin = x$n.thin)
+      }
+      object <- coda::as.mcmc.list(mclis)
+      #end mod as.mcmc
     }
-    object <- coda::as.mcmc.list(mclis)
-    #end mod as.mcmc
+    
+    #if from rstanarm::stan_glm
+    if (class(object)[1] == 'stanreg')
+    {
+      object <- object$stanfit
+    }
   }
   if (coda::is.mcmc.list(object) != TRUE &
      typeof(object) != 'double' &
      class(object) != 'rjags' &
-     typeof(object) != 'S4' &
+     class(object) != 'stanfit' &
+     class(object) != 'brmsfit' &
      class(object) != 'jagsUI')
   {
-    stop('Invalid object type. Input must be stanfit object (rstan), mcmc.list object (coda), rjags object (R2jags), jagsUI object (jagsUI), or matrix with MCMC chains.')
+    stop('Invalid object type. Input must be stanfit object (rstan), stanreg object (rstanarm), brmsfit object (brms), mcmc.list object (coda), rjags object (R2jags), jagsUI object (jagsUI), or matrix with MCMC chains.')
   }
-
-  #NAME SORTING BLOCK
-  if (typeof(object) == 'S4')
+  
+  #if from brms::brm
+  if (class(object) == 'brmsfit')
   {
+    #extract stanfit portion of object
+    object <- object$fit
+  }
+  
+  #NAME SORTING BLOCK
+  if (class(object) == 'stanfit')
+  {
+    #convert to mcmc.list
     temp_in <- rstan::As.mcmc.list(object)
+    #assign new colnames for mccm.list object (important for stanreg obj)
+    coda::varnames(temp_in) <- object@sim$fnames_oi
+    
     if (ISB == TRUE)
     {
       names <- vapply(strsplit(colnames(temp_in[[1]]),
@@ -92,6 +114,13 @@ MCMCchains <- function(object,
   if(coda::is.mcmc.list(object) == TRUE)
   {
     temp_in <- object
+    if(is.null(colnames(temp_in[[1]])))
+    {
+      warning('No parameter names provided. Assigning arbitrary names.')
+      sub_cn <- paste0('Param_', 1:NCOL(temp_in[[1]]))
+      colnames(temp_in[[1]]) <- sub_cn
+    }
+    
     if(ISB == TRUE)
     {
       names <- vapply(strsplit(colnames(temp_in[[1]]),
@@ -106,7 +135,7 @@ MCMCchains <- function(object,
     temp_in <- object
     if(is.null(colnames(temp_in)))
     {
-      warning('No column names (parameter names) provided. Assigning arbitrary names.')
+      warning('No parameter names (column names) provided. Assigning arbitrary names.')
       sub_cn <- paste0('Param_', 1:NCOL(temp_in))
       colnames(temp_in) <- sub_cn
     }

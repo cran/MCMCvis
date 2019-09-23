@@ -4,6 +4,9 @@
 #'
 #'
 #' @param object Object containing MCMC output. See DETAILS below.
+#' 
+#' @param object2 Optional second object containing MCMC output. If specified, parameter estimates from each model will be displayed in a paired manner. Parameter names for \code{'object'} and \code{'object2'} must be identical. See DETAILS below.
+#' 
 #' @param params Character string (or vector of character strings) denoting parameters to be plotted.
 #'
 #' Default \code{'all'} plots posteriors for all parameters. See VALUE below.
@@ -20,13 +23,20 @@
 #'
 #' @param ref_ovl Logical specifying whether the style/color of plotted median dots and CI should be changed based on whether the 50 \% and 95 \% credible intervals overlap the reference line. See DETAILS for more information.
 #'
-#' @param col Character string specifying which color to render estimates on plot. When \code{ref_ovl = TRUE}, this argument has no effect and colors plotted will be based on the credible intervals and reference line.
+#' @param col Character string (or vector of character strings) specifying which color to render estimates on plot. When \code{ref_ovl = TRUE}, this argument has no effect and colors plotted will be based on the credible intervals and reference line. Number of specified colors must equal the number of specified parameters or one.
+#' 
+#' @param col2 Character string (or vector of character strings) specifying which color to render estimates on plot for \code{object2} (if specified). Number of specified colors must equal the number of specified parameters or one. Red by default.
+#'
+#' @param offset Value indicating how much to offset plotted posteriors when \code{object2} is specified (i.e., control the amount of space between the two  plotted posteriors for each parameter). The distance from one set of parameters to another corresponds to a value of 1.
 #'
 #' @param rank Logical specifying whether output should be ranked. If \code{TRUE} posteriors will be ranked in decreasing order (based on specified measure of centrality) from top down.
 #'
 #' @param horiz Logical specifying orientation of plot. If \code{TRUE} posteriors will be plotted running horizontally (parallel to the x-axis). If \code{FALSE} posteriors will be plotted running vertically (perpendicular to the x-axis).
+#' 
 #' @param xlim Numerical vector of length 2, indicating range of x-axis. Only applicable if \code{horiz = TRUE}.
+#' 
 #' @param ylim Numerical vector of length 2, indicating range of y-axis. Only applicable if \code{horiz = FALSE}.
+#' 
 #' @param xlab Character string labeling x-axis. Only applicable if \code{horiz = TRUE}.
 #'
 #' Default label is 'Parameter Estimate'. Option \code{NULL} will return plot with no label on x-axis.
@@ -41,43 +51,27 @@
 #'
 #' Option \code{NULL} will return plot with no labels on axis.
 #'
+#' @param guide_lines Logical specifying whether to plot reference lines for each parameter in order to better visualize which parameter names correspond to each posterior.
+#'
 #' @param guide_axis Logical specifying whether a second axis should be plotted (x-axis if \code{HORIZ = TRUE}, y-axis if \code{HORIZ = FALSE}) to help interpret values on plot.
 #'
 #' @param sz_labels Number specifying size of text for parameter labels on axis.
 #'
-#' @param labels_sz Deprecated - see \code{sz_labels}.
-#'
 #' @param sz_med Number specifying size of points represents posterior medians.
 #' 
-#' @param med_sz Deprecated - see \code{sz_med}.
-#'
 #' @param sz_thick Number specifying thickness of 50 percent CI line (thicker line).
-#' 
-#' @param thick_sz Deprecated - see \code{sz_thick}.
 #'
 #' @param sz_thin Number specifying thickness of 95 percent CI line (thinner line).
-#' 
-#' @param thin_sz Deprecated - see \code{sz_thin}.
 #'
 #' @param sz_ax Number specifying thickness of axis and ticks.
 #'
-#' @param ax_sz Deprecated - see \code{sz_ax}.
-#'
 #' @param sz_ax_txt Number specifying size of text for axis label.
-#' 
-#' @param axis_text_sz Deprecated - see \code{sz_ax}.
 #'
 #' @param sz_tick_txt Number specifying size of text for tick labels on axis.
 #'
-#' @param tick_text_sz Deprecated - see \code{sz_tick_txt}.
-#'
 #' @param sz_main_txt Number specifying size of text for main title.
 #'
-#' @param main_text_sz Deprecated - see \code{sz_main_txt}.
-#'
 #' @param pos_tick Numeric vector specifying where ticks on axis should be placed.
-#' 
-#' @param tick_pos Deprecated - see \code{pos_tick}.
 #'
 #' @param mar Numerical vector of length 4 specifying plot margins - (BOTTOM, LEFT, TOP, RIGHT). Changes to the margin should be made within the function rather than using the \code{par} call.
 #'
@@ -85,8 +79,10 @@
 #'
 #' @section Details:
 #' Points represent posterior medians. Parameters where 50\% credible intervals overlap 0 (or other specified value) are indicated by 'open' circles. Parameters where 50 percent credible intervals DO NOT overlap 0 AND 95 percent credible intervals DO overlap 0 (or other specified value) are indicated by 'closed' gray circles. Parameters where 95 percent credible intervals DO NOT overlap 0 (or other specified value) are indicated by 'closed' black circles. Thick lines represent 50 percent credible intervals while thin lines represent 95 \% credible intervals. \code{ref_ovl = TRUE} can be used to enable this feature.
+#' 
+#' When \code{object2} is specified, paired caterpillar plots of each parameter are produced. For this reason, parameter names of \code{object} and \code{object2} specified with the \code{params} argument must be identical (to be used for comparing posterior estimates of similar models). \code{col} and \code{col2} arguments can be specified to change the color of output from \code{object} and \code{object2}, respectively. By default, output from \code{object} is plotted in black and \code{object2} is plotted in red. The \code{ref_ovl} argument can also be specified.
 #'
-#' \code{object} argument can be a \code{stanfit} object (\code{rstan} package), an \code{mcmc.list} object (\code{coda} package), an \code{R2jags} model object (\code{R2jags} package), a \code{jagsUI} model object (\code{jagsUI} package), or a matrix containing MCMC chains (each column representing MCMC output for a single parameter, rows representing iterations in the chain). The function automatically detects the object type and proceeds accordingly.
+#' \code{object} argument can be a \code{stanfit} object (\code{rstan} package), a \code{stanreg} object (\code{rstanarm} package), a \code{brmsfit} object (\code{brms} package), an \code{mcmc.list} object (\code{coda} package), an \code{R2jags} model object (\code{R2jags} package), a \code{jagsUI} model object (\code{jagsUI} package), or a matrix containing MCMC chains (each column representing MCMC output for a single parameter, rows representing iterations in the chain). The function automatically detects the object type and proceeds accordingly.
 #'
 #' @section Notes:
 #'
@@ -125,216 +121,296 @@
 
 
 MCMCplot <- function(object,
-                   params = 'all',
-                   excl = NULL,
-                   ISB = TRUE,
-                   ref = 0,
-                   ref_ovl = FALSE,
-                   col = 'black',
-                   rank = FALSE,
-                   horiz = TRUE,
-                   xlim,
-                   ylim,
-                   xlab,
-                   ylab,
-                   main,
-                   labels,
-                   guide_axis = TRUE,
-                   sz_labels = 1.2,
-                   labels_sz,
-                   sz_med = 1.5,
-                   med_sz,
-                   sz_thick = 5,
-                   thick_sz,
-                   sz_thin = 2,
-                   thin_sz,
-                   sz_ax = 3,
-                   ax_sz,
-                   sz_ax_txt = 1.3,
-                   axis_text_sz,
-                   sz_tick_txt = 1.2,
-                   tick_text_sz,
-                   sz_main_txt = 1.2,
-                   main_text_sz,
-                   pos_tick,
-                   tick_pos,
-                   mar = c(5.1, 4.1, 4.1, 2.1))
+                     object2 = NULL,
+                     params = 'all',
+                     excl = NULL,
+                     ISB = TRUE,
+                     ref = 0,
+                     ref_ovl = FALSE,
+                     col = 'black',
+                     col2 = 'red',
+                     offset = 0.1,
+                     rank = FALSE,
+                     horiz = TRUE,
+                     xlim,
+                     ylim,
+                     xlab,
+                     ylab,
+                     main,
+                     labels,
+                     guide_lines = FALSE,
+                     guide_axis = TRUE,
+                     sz_labels = 1.2,
+                     sz_med = 1.5,
+                     sz_thick = 5,
+                     sz_thin = 2,
+                     sz_ax = 3,
+                     sz_ax_txt = 1.3,
+                     sz_tick_txt = 1.2,
+                     sz_main_txt = 1.2,
+                     pos_tick,
+                     mar = c(5.1, 4.1, 4.1, 2.1))
 {
   data <- MCMCchains(object, params = params, excl = excl, ISB = ISB)
 
+  if (!is.null(object2))
+  {
+    data2 <- MCMCchains(object2, params = params, excl = excl, ISB = ISB)
+    
+    if (!identical(colnames(data), colnames(data2)))
+    {
+      stop('`object2` must have identical column names to `object`.')
+    }
+  }
+  
   # Plotting parameters -----------------------------------------------------
 
   if (missing(pos_tick))
   {pos_tick = NULL}
 
-  gr_col = 'gray60' #color used for CI and medians
-  ref_col = 'gray60' #color used for 0 line
-  thin = 95 #CI for thin line
-  thick = 50 #CI for thick line
-  PL_SC = 0.3 #how much whitespace flanks plotted estimates
+  gr_col <- 'gray60' #color used for CI and medians
+  ref_col <- 'gray60' #color used for 0 line
+  guide_col <- 'gray80'
+  thin <- 95 #CI for thin line
+  thick <- 50 #CI for thick line
+  PL_SC <- 0.3 #how much whitespace flanks plotted estimates
+  
+  # Colors ------------------------------------------------------------------
 
-
-  # Deprecation warnings --------------------------------------------------------
-
-  if (!missing(labels_sz))
+  #number of parameters
+  np <- NCOL(data)
+  
+  if (np > 1)
   {
-    warning('Argument "labels_sz" is deprecated; please use "sz_labels" instead.', call. = FALSE)
-    sz_labels <- labels_sz
+    if (length(col) == 1)
+    {
+      COL <- rep(col, np)
+    } else {
+      if (length(col) != np)
+      {
+        stop('Number of specified colors must equal number of plotted parameters (or one).')
+      } else {
+        COL <- col
+      }
+    }
+    if (!is.null(object2))
+    {
+      if (length(col2) == 1)
+      {
+        COL2 <- rep(col2, np)
+      } else {
+        if (length(col2) != np)
+        {
+          stop('Number of specified colors must equal number of plotted parameters (or one).')
+        } else {
+          COL2 <- col2
+        }
+      }
+    }
   }
-  if (!missing(med_sz))
+  if (np == 1)
   {
-    warning('Argument "med_sz" is deprecated; please use "sz_med" instead.', call. = FALSE)
-    sz_med <- med_sz
-  }
-  if (!missing(thick_sz))
-  {
-    warning('Argument "thick_sz" is deprecated; please use "sz_thick" instead.', call. = FALSE)
-    sz_thick <- thick_sz
-  }
-  if (!missing(thin_sz))
-  {
-    warning('Argument "thin_sz" is deprecated; please use "sz_thin" instead.', call. = FALSE)
-    sz_thin <- thin_sz
-  }
-  if (!missing(axis_text_sz))
-  {
-    warning('Argument "axis_text_sz" is deprecated; please use "sz_ax_txt" instead.', call. = FALSE)
-    sz_ax_txt <- axis_text_sz
-  }
-  if (!missing(ax_sz))
-  {
-    warning('Argument "ax_sz" is deprecated; please use "sz_ax" instead.', call. = FALSE)
-    sz_ax <- ax_sz
-  }
-  if (!missing(tick_text_sz))
-  {
-    warning('Argument "tick_text_sz" is deprecated; please use "sz_tick_txt" instead.', call. = FALSE)
-    sz_tick_txt <- tick_text_sz
-  }
-  if (!missing(main_text_sz))
-  {
-    warning('Argument "main_text_sz" is deprecated; please use "sz_main_txt" instead.', call. = FALSE)
-    sz_main_txt <- main_text_sz
-  }
-  if (!missing(tick_pos))
-  {
-    warning('Argument "tick_pos" is deprecated; please use "pos_tick" instead.', call. = FALSE)
-    pos_tick <- tick_pos
+    if (length(col) == 1)
+    {
+      COL <- col
+    } else {
+      stop('Number of specified colors must equal number of plotted parameters (or one).')
+    }
+    if (!is.null(object2))
+    {
+      if (length(col2) == 1)
+      {
+        COL2 <- col2
+      } else {
+        stop('Number of specified colors must equal number of plotted parameters (or one).')
+      }
+    }
   }
   
   # Process data ------------------------------------------------------------
 
-  if (NCOL(data) > 1)
+  pro_fun <- function(input, ...)
   {
-    if (length(thin) == 1 & typeof(thin) == 'double' & length(thick) == 1 & typeof(thick) == 'double')
+    if (np > 1)
     {
-      chains <- as.data.frame(data)
-      len <- NCOL(data)
-
-      if (rank == TRUE)
+      if (length(thin) == 1 & typeof(thin) == 'double' & 
+          length(thick) == 1 & typeof(thick) == 'double')
       {
-        tsrt <- apply(chains, 2, stats::median)
-        idx <- order(tsrt, decreasing = TRUE)
+        chains <- as.data.frame(input)
+        len <- np
+
+        if (rank == TRUE)
+        {
+          tsrt <- apply(chains, 2, stats::median)
+          idx <- order(tsrt, decreasing = TRUE)
+        }
+        if (rank == FALSE)
+        {
+          idx <- len:1
+        }
+
+        thick_ci <- c((100 - ((100 - thick)/2)), ((100 - thick)/2)) * 0.01
+        thin_ci <- c((100 - ((100 - thin)/2)), ((100 - thin)/2)) * 0.01
+
+        thick_q <- apply(chains, 2, stats::quantile, probs = thick_ci)[,idx]
+        thin_q <- apply(chains, 2, stats::quantile, probs = thin_ci)[,idx]
+
+        medians <- apply(chains, 2, stats::quantile, probs = 0.5)[idx]
+      } else {
+        stop("'thick' and 'thin' must be scalars")
       }
-      if (rank == FALSE)
-      {
-        idx <- len:1
-      }
-
-      thick_ci <- c((100-((100-thick)/2)), ((100-thick)/2))*0.01
-      thin_ci <- c((100-((100-thin)/2)), ((100-thin)/2))*0.01
-
-      thick_q <- apply(chains, 2, stats::quantile, probs= thick_ci)[,idx]
-      thin_q <- apply(chains, 2, stats::quantile, probs= thin_ci)[,idx]
-
-      medians <- apply(chains, 2, stats::quantile, probs = 0.5)[idx]
-    }else
-    {
-      stop("'thick' and 'thin' must be single numbers")
     }
+
+    if (np == 1)
+    {
+      if (length(thin) == 1 & typeof(thin) == 'double' & 
+          length(thick) == 1 & typeof(thick) == 'double')
+      {
+        chains <- as.data.frame(input)
+        len <- 1
+        idx <- 1
+
+        thick_ci <- c((100- ((100 - thick)/2)), ((100 - thick)/2)) * 0.01
+        thin_ci <- c((100 - ((100 - thin)/2)), ((100 - thin)/2)) * 0.01
+
+        thick_q <- as.matrix(apply(chains, 2, stats::quantile, probs= thick_ci)[,idx])
+        thin_q <- as.matrix(apply(chains, 2, stats::quantile, probs= thin_ci)[,idx])
+
+        medians <- apply(chains, 2, stats::quantile, probs = 0.5)[idx]
+      } else {
+        stop("'thick' and 'thin' must be single numbers")
+      }
+    }
+    return(list(len, idx, thick_q, thin_q, medians))
+  }
+  
+  pf_out <- pro_fun(input = data)
+  
+  #assign list elements to objects
+  len <- pf_out[[1]]
+  idx <- pf_out[[2]]
+  thick_q <- pf_out[[3]]
+  thin_q <- pf_out[[4]]
+  medians <- pf_out[[5]]
+  
+  if (!is.null(object2))
+  {
+    pf_out2 <- pro_fun(input = data2)
+    thick_q2 <- pf_out2[[3]]
+    thin_q2 <- pf_out2[[4]]
+    medians2 <- pf_out2[[5]]
+  } else {
+    thin_q2 <- NULL
   }
 
-  if (NCOL(data) == 1)
-  {
-    if (length(thin) == 1 & typeof(thin) == 'double' & length(thick) == 1 & typeof(thick) == 'double')
-    {
-      chains <- as.data.frame(data)
-      len <- 1
-      idx <- 1
+  
+  # Plot prep ---------------------------------------------------------------
 
-      thick_ci <- c((100-((100-thick)/2)), ((100-thick)/2))*0.01
-      thin_ci <- c((100-((100-thin)/2)), ((100-thin)/2))*0.01
-
-      thick_q <- as.matrix(apply(chains, 2, stats::quantile, probs= thick_ci)[,idx])
-      thin_q <- as.matrix(apply(chains, 2, stats::quantile, probs= thin_ci)[,idx])
-
-      medians <- apply(chains, 2, stats::quantile, probs = 0.5)[idx]
-    }else
-    {
-      stop("'thick' and 'thin' must be single numbers")
-    }
-  }
-
-  # plotting ----------------------------------------------------------------
-
-  #Determine which params have CI that overlap 0 (or ref line more technically)
-  black_cl <- c() #95% CI (default) does not overlap 0
-  gray_cl <- c() #50% CI (default) does not overlap 0
-  white_cl <- c() #Both 50% and 95% CI (default) overlap 0
-
+  #reference line
   if(!is.null(ref))
   {
     marker <- ref
-  }else {
+  } else {
     marker <- 0
   }
 
-  for (i in 1:len)
+  #coloring with regards to reference line
+  if (ref_ovl == TRUE)
   {
-    #i <- 1
-    if ((thin_q[1,i] > marker & thin_q[2,i] > marker) |
-        (thin_q[1,i] < marker & thin_q[2,i] < marker))
+    #Determine which params have CI that overlap 0 (or ref line if specified)
+    black_cl <- c() #95% CI (default) does not overlap 0
+    gray_cl <- c() #50% CI (default) does not overlap 0
+    white_cl <- c() #Both 50% and 95% CI overlap 0
+    
+    for (i in 1:len)
     {
-      black_cl <- c(black_cl, i)
-    } else {
-      if ((thick_q[1,i] > marker & thick_q[2,i] > marker) |
-          (thick_q[1,i] < marker & thick_q[2,i] < marker))
+      #i <- 1
+      if ((thin_q[1,i] > marker & thin_q[2,i] > marker) |
+          (thin_q[1,i] < marker & thin_q[2,i] < marker))
       {
-        gray_cl <- c(gray_cl, i)
-      }else {
-        white_cl <- c(white_cl, i)
+        black_cl <- c(black_cl, i)
+      } else {
+        if ((thick_q[1,i] > marker & thick_q[2,i] > marker) |
+            (thick_q[1,i] < marker & thick_q[2,i] < marker))
+        {
+          gray_cl <- c(gray_cl, i)
+        } else {
+          white_cl <- c(white_cl, i)
+        }
+      }
+    }
+    
+    if (horiz == FALSE)
+    {
+      v_black_cl <- rev(black_cl)
+      v_gray_cl <- rev(gray_cl)
+      v_white_cl <- rev(white_cl)
+    }
+    
+    if (!is.null(object2))
+    {
+      black_cl2 <- c()
+      gray_cl2 <- c()
+      white_cl2 <- c()
+      
+      for (i in 1:len)
+      {
+        #i <- 1
+        if ((thin_q2[1,i] > marker & thin_q2[2,i] > marker) |
+            (thin_q2[1,i] < marker & thin_q2[2,i] < marker))
+        {
+          black_cl2 <- c(black_cl2, i)
+        } else {
+          if ((thick_q2[1,i] > marker & thick_q2[2,i] > marker) |
+              (thick_q2[1,i] < marker & thick_q2[2,i] < marker))
+          {
+            gray_cl2 <- c(gray_cl2, i)
+          } else {
+            white_cl2 <- c(white_cl2, i)
+          }
+        }
+      }
+      
+      if (horiz == FALSE)
+      {
+        v_black_cl2 <- rev(black_cl2)
+        v_gray_cl2 <- rev(gray_cl2)
+        v_white_cl2 <- rev(white_cl2)
       }
     }
   }
 
-
-  #plot for horizontal - CI lines parallel to x-axis
+  # Horizontal plot - CI lines parallel to x-axis ---------------------------
+  
   if (horiz == TRUE)
   {
     if (missing(xlim))
     {
-      rn <- diff(range(thin_q))*PL_SC
-      xlim = c((min(thin_q) - rn), (max(thin_q) + rn))
+      thin_comb <- c(thin_q, thin_q2)
+      rn <- diff(range(thin_comb)) * PL_SC
+      XLIM <- c((min(thin_comb) - rn), (max(thin_comb) + rn))
+    } else {
+      XLIM <- xlim
     }
     if (len > 20)
     {
       tt <- 1.5
-    } else{
+    } else {
       alpha <- 0.667
       beta <- 0.0412
-      tt <- alpha + beta*len
+      tt <- alpha + beta * len
     }
-    ylim = c(1-tt,(len)+tt)
+    YLIM <- c((1 - tt), (len + tt))
     if (missing(xlab))
-    {xlab = 'Parameter Estimate'}
+    {xlab <- 'Parameter Estimate'}
     if (is.null(xlab))
-    {xlab = ''}
+    {xlab <- ''}
     if (missing(main))
-    {main = ''}
+    {main <- ''}
     if (missing(labels))
     {
-      labs = names(medians)
-    }else{
+      labs <- names(medians)
+    } else {
       if (!missing(labels))
       {
         if (is.null(labels))
@@ -346,8 +422,7 @@ MCMCplot <- function(object,
           if (length(labels) == len)
           {
             labs <- labels[idx]
-          }else
-          {
+          } else {
             stop('Labels length not equal to number of parameters')
           }
         }
@@ -355,251 +430,476 @@ MCMCplot <- function(object,
     }
 
     #0.2 inches per line - mar measured in lines
-    m_char <- (max(sapply(labs, function(x){graphics::strwidth(x, cex = sz_labels, units = 'in')}))/0.2)
-
-    graphics::par(mar=c(mar[1], (m_char + (mar[2] - 3)), mar[3], mar[4]-1))
+    m_char <- max(sapply(labs, function(x){graphics::strwidth(x, cex = sz_labels, 
+                                                              units = 'in')}))/0.2
+  
+    graphics::par(mar = c(mar[1], (m_char + (mar[2] - 3)), mar[3], mar[4] - 1))
 
     #plot blank plot
-    graphics::plot(medians, (1:len), xlim = xlim, ylim = ylim, type = "n",
-         ann = TRUE, xaxt = 'n', yaxt = "n", bty = "n", ylab = NA,
-         xlab = xlab, cex.lab = sz_ax_txt,
-         yaxs = 'i') #cex.lab is axis label
-    #lab #number of ticks to plot on each axis
+    graphics::plot(medians, (1:len), xlim = XLIM, ylim = YLIM, type = "n", 
+                   ann = TRUE, xaxt = 'n', yaxt = "n", bty = "n", ylab = NA, 
+                   xlab = xlab, cex.lab = sz_ax_txt, 
+                   yaxs = 'i') #cex.lab is axis label
 
     #title
     graphics::title(main, cex.main = sz_main_txt)
 
     if (guide_axis == TRUE)
     {
-      #top axis params
-      graphics::axis(3, lwd.ticks = sz_ax, labels = FALSE,
-           at = pos_tick, lwd = sz_ax)
+     #top axis params
+     graphics::axis(3, lwd.ticks = sz_ax, labels = FALSE, 
+                    at = pos_tick, lwd = sz_ax)
     }
 
-    #bottom axis params
-    graphics::axis(1, lwd.ticks = sz_ax, labels = TRUE,
-         at = pos_tick, lwd = sz_ax,
-         cex.axis = sz_tick_txt) #bottom axis
-    #left axis params (labels)
-    graphics::axis(2, at = ((1:len)), tick = FALSE,
-         labels = labs, las = 1, adj = 0, #las - 0 parallel to axis, 1 horiz, 2 perp to axis, 3 vert
-         line = -1, cex.axis = sz_labels)
+     #bottom axis params
+     graphics::axis(1, lwd.ticks = sz_ax, labels = TRUE, 
+                    at = pos_tick, lwd = sz_ax, 
+                    cex.axis = sz_tick_txt) #bottom axis
+     
+     #left axis params (labels)
+     #las - 0 parallel to axis, 1 horiz, 2 perp to axis, 3 vert
+     graphics::axis(2, at = ((1:len)), tick = FALSE, 
+                    labels = labs, las = 1, adj = 0, 
+                    line = -1, cex.axis = sz_labels)
 
-    #positions to plot CI
-    blk_bnd <- rbind(black_cl, black_cl)
-    gry_bnd <- rbind(gray_cl, gray_cl)
-    wht_bnd <- rbind(white_cl, white_cl)
+     if (guide_lines == TRUE)
+     {
+       #limits
+       #determine where ticks were placed - from axTicks source code:
+       xaxp <- graphics::par("xaxp")
+       XLIM2 <- c(xaxp[1], xaxp[2])
+       xs <- matrix(rep(XLIM2, len), nrow = 2)
+       ys <- rbind(1:len, 1:len)
+       graphics::matlines(xs, ys, lty = 1, col = guide_col)
+     }
+     
+     #ref line
+     if(!is.null(ref))
+     {
+       graphics::abline(v=ref, lty = 2, lwd = 3, col = ref_col)
+     }
 
-    #ref line
-    if(!is.null(ref))
-    {
-      graphics::abline(v=ref, lty = 2, lwd = 3, col = ref_col)
-    }
+     if (ref_ovl == TRUE)
+     {
+       #positions to plot CI
+       blk_bnd <- rbind(black_cl, black_cl)
+       gry_bnd <- rbind(gray_cl, gray_cl)
+       wht_bnd <- rbind(white_cl, white_cl)
+       
+       #Black CI
+       if (!is.null(black_cl))
+       {
+         if (is.null(object2))
+         {
+          #Thick
+          graphics::matlines(thick_q[,black_cl], blk_bnd, 
+                             type = 'l', lty = 1, lwd = sz_thick, col = 'black')
+          #Thin
+          graphics::matlines(thin_q[,black_cl], blk_bnd, 
+                             type = 'l', lty = 1, lwd = sz_thin, col = 'black')
+         } else {
+           
+           blk_bnd2 <- rbind(black_cl2, black_cl2)
+           #object
+           graphics::matlines(thick_q[,black_cl], (blk_bnd + offset),
+                              type = 'l', lty = 1, lwd = sz_thick, col = 'black')
+           graphics::matlines(thin_q[,black_cl], (blk_bnd + offset),
+                              type = 'l', lty = 1, lwd = sz_thin, col = 'black')
+           #object2
+           graphics::matlines(thick_q2[,black_cl2], (blk_bnd2 - offset),
+                              type = 'l', lty = 1, lwd = sz_thick, col = 'black')
+           graphics::matlines(thin_q2[,black_cl2], (blk_bnd2 - offset),
+                              type = 'l', lty = 1, lwd = sz_thin, col = 'black')
+         }
+       }
 
-    if (ref_ovl == TRUE)
-    {
-      #Black CI
-      if (!is.null(black_cl))
-      {
-        #Thick
-        graphics::matlines(thick_q[,black_cl], blk_bnd,
-                 type = 'l', lty = 1, lwd = sz_thick, col = 'black')
-        #Thin
-        graphics::matlines(thin_q[,black_cl], blk_bnd,
-                 type = 'l', lty = 1, lwd = sz_thin, col = 'black')
-      }
+       #Gray CI
+       if (!is.null(gray_cl))
+       {
+         if (is.null(object2))
+         {
+          #Thick
+          graphics::matlines(thick_q[,gray_cl], gry_bnd,
+                    type = 'l', lty = 1, lwd = sz_thick, col = gr_col)
+          #Thin
+          graphics::matlines(thin_q[,gray_cl], gry_bnd,
+                    type = 'l', lty = 1, lwd = sz_thin, col = gr_col)
+         } else {
+           
+           gry_bnd2 <- rbind(gray_cl2, gray_cl2)
+           #object
+           graphics::matlines(thick_q[,gray_cl], (gry_bnd + offset),
+                              type = 'l', lty = 1, lwd = sz_thick, 
+                              col = gr_col)
+           graphics::matlines(thin_q[,gray_cl], (gry_bnd + offset),
+                              type = 'l', lty = 1, lwd = sz_thin, 
+                              col = gr_col)
+           #object2
+           graphics::matlines(thick_q2[,gray_cl2], (gry_bnd2 - offset),
+                              type = 'l', lty = 1, lwd = sz_thick, 
+                              col = gr_col)
+           graphics::matlines(thin_q2[,gray_cl2], (gry_bnd2 - offset),
+                              type = 'l', lty = 1, lwd = sz_thin, 
+                              col = gr_col)
+         }
+       }
 
-      #Gray CI
-      if (!is.null(gray_cl))
-      {
-        #Thick
-        graphics::matlines(thick_q[,gray_cl], gry_bnd,
-                 type = 'l', lty = 1, lwd = sz_thick, col = gr_col)
-        #Thin
-        graphics::matlines(thin_q[,gray_cl], gry_bnd,
-                 type = 'l', lty = 1, lwd = sz_thin, col = gr_col)
-      }
+       #White CI
+       if (!is.null(white_cl))
+       {
+         if (is.null(object2))
+         {
+          graphics::matlines(thick_q[,white_cl], wht_bnd, 
+                             type = 'l', lty = 1, lwd = sz_thick, 
+                             col = gr_col) #white (gray)
+          graphics::matlines(thin_q[,white_cl], wht_bnd, 
+                             type = 'l', lty = 1, lwd = sz_thin, 
+                             col = gr_col) #white (gray)
+         } else {
+           
+           wht_bnd2 <- rbind(white_cl2, white_cl2)
+           #object
+           graphics::matlines(thick_q[,white_cl], (wht_bnd + offset),
+                              type = 'l', lty = 1, lwd = sz_thick, 
+                              col = gr_col) #white (gray)
+           graphics::matlines(thin_q[,white_cl], (wht_bnd + offset),
+                              type = 'l', lty = 1, lwd = sz_thin, 
+                              col = gr_col) #white (gray)
+           #object2
+           graphics::matlines(thick_q2[,white_cl2], (wht_bnd2 - offset),
+                              type = 'l', lty = 1, lwd = sz_thick, 
+                              col = gr_col) #white (gray)
+           graphics::matlines(thin_q2[,white_cl2], (wht_bnd2 - offset),
+                              type = 'l', lty = 1, lwd = sz_thin, 
+                              col = gr_col) #white (gray)
+         }
+       }
 
-      #White CI
-      if (!is.null(white_cl))
-      {
-        graphics::matlines(thick_q[,white_cl], wht_bnd,
-                 type = 'l', lty = 1, lwd = sz_thick, col = gr_col) #white (gray)
-        graphics::matlines(thin_q[,white_cl], wht_bnd,
-                 type = 'l', lty = 1, lwd = sz_thin, col = gr_col) #white (gray)
-      }
+       #Medians
+       if (is.null(object2))
+       {
+        graphics::points(medians, 1:len, pch = 16, col = 'white', cex = sz_med)
+        graphics::points(medians[black_cl], black_cl, pch = 16, 
+                         col = 'black', cex = sz_med)
+        graphics::points(medians[gray_cl], gray_cl, pch = 16, 
+                         col = gr_col, cex = sz_med)
+        graphics::points(medians[white_cl], white_cl, pch = 21, 
+                         col = gr_col, cex = sz_med, lwd = 2) 
+       } else {
+         
+         #object
+         graphics::points(medians, (1:len + offset), pch = 16, 
+                          col = 'white', cex = sz_med)
+         graphics::points(medians[black_cl], (black_cl + offset), pch = 16, 
+                          col = 'black', cex = sz_med)
+         graphics::points(medians[gray_cl], (gray_cl + offset), pch = 16, 
+                          col = gr_col, cex = sz_med)
+         graphics::points(medians[white_cl], (white_cl + offset), pch = 21, 
+                          col = gr_col, cex = sz_med, lwd = 2) 
+         
+         #object2
+         graphics::points(medians2, (1:len - offset), pch = 16, 
+                          col = 'white', cex = sz_med)
+         graphics::points(medians2[black_cl2], (black_cl2 - offset), pch = 16, 
+                          col = 'black', cex = sz_med)
+         graphics::points(medians2[gray_cl2], (gray_cl2 - offset), pch = 16, 
+                          col = gr_col, cex = sz_med)
+         graphics::points(medians2[white_cl2], (white_cl2 - offset), pch = 21, 
+                          col = gr_col, cex = sz_med, lwd = 2) 
+       }
+     } else {
+       if (is.null(object2))
+       {
+         graphics::matlines(thick_q[,1:len], rbind(1:len, 1:len), 
+                            type = 'l', lty = 1, lwd = sz_thick, col = COL[idx])
+         graphics::matlines(thin_q[,1:len], rbind(1:len, 1:len),
+                  type = 'l', lty = 1, lwd = sz_thin, col = COL[idx])
+         graphics::points(medians[1:len], 1:len, pch = 16,
+                col = COL[idx], cex = sz_med)
+       } else {
+         
+         #object
+         graphics::matlines(thick_q[,1:len], (rbind(1:len, 1:len) + offset),
+                            type = 'l', lty = 1, lwd = sz_thick, col = COL[idx])
+         graphics::matlines(thin_q[,1:len], (rbind(1:len, 1:len) + offset),
+                            type = 'l', lty = 1, lwd = sz_thin, col = COL[idx])
+         graphics::points(medians[1:len], (1:len + offset), pch = 16,
+                          col = COL[idx], cex = sz_med)
+         
+         #object2
+         graphics::matlines(thick_q2[,1:len], (rbind(1:len, 1:len) - offset),
+                            type = 'l', lty = 1, lwd = sz_thick, col = COL2[idx])
+         graphics::matlines(thin_q2[,1:len], (rbind(1:len, 1:len) - offset),
+                            type = 'l', lty = 1, lwd = sz_thin, col = COL2[idx])
+         graphics::points(medians2[1:len], (1:len - offset), pch = 16,
+                          col = COL2[idx], cex = sz_med)
+       }
+     }
+   }
+   
+   # Vertical plot - CI lines parallel to x-axis -----------------------------
 
-      #Medians
-      graphics::points(medians, 1:len, pch = 16, col = 'white', cex = sz_med)
-      graphics::points(medians[black_cl], black_cl, pch = 16, col = 'black', cex = sz_med)
-      graphics::points(medians[gray_cl], gray_cl, pch = 16, col = gr_col, cex = sz_med)
-      graphics::points(medians[white_cl], white_cl, pch = 21, col = gr_col, cex = sz_med, lwd = 2)
-    } else{
-      graphics::matlines(thick_q[,1:len], rbind(1:len, 1:len),
-               type = 'l', lty = 1, lwd = sz_thick, col = col)
-      graphics::matlines(thin_q[,1:len], rbind(1:len, 1:len),
-               type = 'l', lty = 1, lwd = sz_thin, col = col)
-      #medians
-      graphics::points(medians[1:len], 1:len, pch = 16,
-             col = col, cex = sz_med)
-    }
-  }
+   if (horiz == FALSE)
+   {
+     if (missing(ylim))
+     {
+       thin_comb <- c(thin_q, thin_q2)
+       rn <- diff(range(thin_comb)) * PL_SC
+       YLIM <- c((min(thin_comb) - rn), (max(thin_comb) + rn))
+     } else {
+       YLIM <- ylim
+     }
+     if (len > 20)
+     {
+       tt <- 1.5
+     } else {
+       alpha <- 0.667
+       beta <- 0.0412
+       tt <- alpha + beta * len
+     }
+     XLIM = c((1 - tt), (len + tt))
+     if (missing(ylab))
+     {ylab = 'Parameter Estimate'}
+     if (is.null(ylab))
+     {ylab = ''}
+     if (missing(main))
+     {main = ''}
+     if (missing(labels))
+     {
+       labs = names(medians)
+     } else {
+       if (!missing(labels))
+       {
+         if (is.null(labels))
+         {
+           labs <- rep('', len)
+         }
+         if (!is.null(labels))
+         {
+           if (length(labels) == len)
+           {
+             labs <- labels[idx]
+           } else {
+             stop('Labels length not equal to number of parameters')
+           }
+         }
+       }
+     }
 
-  #vertical plot - CI lines perpendicular to x-axis
-  if (horiz == FALSE)
-  {
-    if (missing(ylim))
-    {
-      rn <- diff(range(thin_q))*PL_SC
-      ylim = c((min(thin_q) - rn), (max(thin_q) + rn))
-    }
-    if (len > 20)
-    {
-      tt <- 1.5
-    } else{
-      alpha <- 0.667
-      beta <- 0.0412
-      tt <- alpha + beta*len
-    }
-    xlim = c(1-tt,(len)+tt)
-    if (missing(ylab))
-    {ylab = 'Parameter Estimate'}
-    if (is.null(ylab))
-    {ylab = ''}
-    if (missing(main))
-    {main = ''}
-    if (missing(labels))
-    {
-      labs = names(medians)
-    }else{
-      if (!missing(labels))
-      {
-        if (is.null(labels))
-        {
-          labs <- rep('', len)
-        }
-        if (!is.null(labels))
-        {
-          if (length(labels) == len)
-          {
-            labs <- labels[idx]
-          }else
-          {
-            stop('Labels length not equal to number of parameters')
-          }
-        }
-      }
-    }
+     #0.2 inches per line - mar measured in lines
+     m_char <- (max(sapply(labs, function(x){graphics::strwidth(x, cex = sz_labels, 
+                                                                units = 'i')}))  /0.2)
+     
+     #blank plot - do not display
+     grDevices::pdf(file = NULL)
+     graphics::plot((len:1), medians, xlim = XLIM, ylim = YLIM, type = "n",
+                    ann = TRUE, xaxt = 'n', yaxt = "n", bty = "n", ylab = NA,
+                    xlab = NA, cex.lab = sz_ax_txt, xaxs = 'i')
+     #create invisible ticks to determine where to put y-axis label
+     tickp <- graphics::axis(2, lwd.ticks = sz_ax, labels = FALSE,
+                             at = pos_tick, lwd = sz_ax,
+                             cex.axis = sz_tick_txt, las = 1, col = 'white',
+                             col.ticks = 'white')
+     invisible(grDevices::dev.off())
+     #determine how long labels are
+     ml_tickp <- max(graphics::strwidth(tickp, cex = sz_tick_txt, units = 'in'))
+     #5 lines/inch
+     ll <- 1.8 + 5 * ml_tickp
+     #set plot margins according to labels
+     graphics::par(mar = c((m_char + (mar[1] - 4)), 
+                           mar[2] + 1 + ll - 3, mar[3] - 1.5, mar[4]))
 
-    #to determine margins for plot
-    #0.2 inches per line - mar measured in lines
-    m_char <- (max(sapply(labs, function(x){graphics::strwidth(x, cex = sz_labels, units = 'in')}))/0.2)
-    #blank plot - do not display
-    grDevices::pdf(file = NULL)
-    graphics::plot((len:1), medians, xlim = xlim, ylim = ylim, type = "n",
-                   ann = TRUE, xaxt = 'n', yaxt = "n", bty = "n", ylab = NA,
-                   xlab = NA, cex.lab = sz_ax_txt, xaxs = 'i')
-    #create invisible ticks to determine where to put y-axis label
-    tickp <- graphics::axis(2, lwd.ticks = sz_ax, labels = FALSE,
-                            at = pos_tick, lwd = sz_ax,
-                            cex.axis = sz_tick_txt, las = 1, col = 'white',
-                            col.ticks = 'white')
-    invisible(grDevices::dev.off())
-    #determine how long labels are
-    ml_tickp <- max(graphics::strwidth(tickp, cex = sz_tick_txt, units = 'in'))
-    #5 lines/inch
-    ll <- 1.8 + 5 * ml_tickp
-    #set plot margins according to labels
-    graphics::par(mar = c((m_char + (mar[1] - 4)), mar[2]+1+ll-3, mar[3] - 1.5, mar[4]))
+     #new blank plot
+     graphics::plot((len:1), medians, xlim = XLIM, ylim = YLIM, type = "n",
+                    ann = TRUE, xaxt = 'n', yaxt = "n", bty = "n", ylab = NA,
+                    xlab = NA, cex.lab = sz_ax_txt, xaxs = 'i')
+     #ticks
+     graphics::axis(2, lwd.ticks = sz_ax, labels = TRUE,
+                    at = pos_tick, lwd = sz_ax,
+                    cex.axis = sz_tick_txt, las = 1)
+     #y-axis label
+     graphics::title(ylab = ylab, cex.lab = sz_ax_txt, line = ll)
 
-    #new blank plot
-    graphics::plot((len:1), medians, xlim = xlim, ylim = ylim, type = "n",
-                   ann = TRUE, xaxt = 'n', yaxt = "n", bty = "n", ylab = NA,
-                   xlab = NA, cex.lab = sz_ax_txt, xaxs = 'i')
-    #ticks
-    graphics::axis(2, lwd.ticks = sz_ax, labels = TRUE,
-                   at = pos_tick, lwd = sz_ax,
-                   cex.axis = sz_tick_txt, las = 1)
-    #y-axis label
-    graphics::title(ylab = ylab, cex.lab = sz_ax_txt, line = ll)
+     #title
+     graphics::title(main, cex.main = sz_main_txt, line = 0.5)
 
-    #title
-    graphics::title(main, cex.main = sz_main_txt, line = 0.5)
+     if (guide_axis == TRUE)
+     {
+       #right axis params
+       graphics::axis(4, lwd.ticks = sz_ax, labels = FALSE,
+                      at = pos_tick, lwd = sz_ax)
+     }
 
-    if (guide_axis == TRUE)
-    {
-      #right axis params
-      graphics::axis(4, lwd.ticks = sz_ax, labels = FALSE,
-                     at = pos_tick, lwd = sz_ax)
-    }
+     #bottom axis params (labels)
+     #las - 0 parallel to axis, 1 horiz, 2 perp to axis, 3 vert
+     graphics::axis(1, at = (len:1) + 0.013, tick = FALSE,
+                    labels = labs, las = 2, adj = 0,
+                    line = -1, cex.axis = sz_labels)
 
-    #bottom axis params (labels)
-    graphics::axis(1, at = (len:1) + 0.013, tick = FALSE,
-                   labels = labs, las = 2, adj = 0, #las - 0 parallel to axis, 1 horiz, 2 perp to axis, 3 vert
-                   line = -1, cex.axis = sz_labels)
+     if (guide_lines == TRUE)
+     {
+       #limits
+       yaxp <- graphics::par("yaxp")
+       YLIM2 <- c(yaxp[1], yaxp[2])
+       ys <- matrix(rep(YLIM2, len), nrow = 2)
+       xs <- rbind(1:len, 1:len)
+       graphics::matlines(xs, ys, lty = 1, col = guide_col)
+     }
+     
+     #ref line
+     if (!is.null(ref))
+     {
+       graphics::abline(h=ref, lty = 2, lwd = 3, col = ref_col)
+     }
 
-    #ref line
-    if(!is.null(ref))
-    {
-      graphics::abline(h=ref, lty = 2, lwd = 3, col = ref_col)
-    }
+     if (ref_ovl == TRUE)
+     {
+       #positions to plot CI
+       v_blk_bnd <- matrix(rep(rev(len + 1 - black_cl), 2), nrow = 2, byrow = TRUE)
+       v_gry_bnd <- matrix(rep(rev(len + 1 - gray_cl), 2), nrow = 2, byrow = TRUE)
+       v_wht_bnd <- matrix(rep(rev(len + 1 - white_cl), 2), nrow = 2, byrow = TRUE)
+       
+       #Black CI
+       if (!is.null(black_cl))
+       {
+         if (is.null(object2))
+         {
+          #Thick
+          graphics::matlines(v_blk_bnd, thick_q[,v_black_cl], 
+                             type = 'l', lty = 1, lwd = sz_thick, col = 'black')
+          #Thin
+          graphics::matlines(v_blk_bnd, thin_q[,v_black_cl], 
+                             type = 'l', lty = 1, lwd = sz_thin, col = 'black')
+         } else {
+           
+           v_blk_bnd2 <- matrix(rep(rev(len + 1 - black_cl2), 2), nrow = 2, byrow = TRUE)
+           #object
+           graphics::matlines((v_blk_bnd - offset), thick_q[,v_black_cl], 
+                              type = 'l', lty = 1, lwd = sz_thick, col = 'black')
+           graphics::matlines((v_blk_bnd - offset), thin_q[,v_black_cl], 
+                              type = 'l', lty = 1, lwd = sz_thin, col = 'black')
+           #object2
+           graphics::matlines((v_blk_bnd2 + offset), thick_q2[,v_black_cl2], 
+                              type = 'l', lty = 1, lwd = sz_thick, col = 'black')
+           graphics::matlines((v_blk_bnd2 + offset), thin_q2[,v_black_cl2], 
+                              type = 'l', lty = 1, lwd = sz_thin, col = 'black')
+         }
+       }
 
-    #positions to plot CI
-    v_black_cl <- rev(black_cl)
-    v_gray_cl <- rev(gray_cl)
-    v_white_cl <- rev(white_cl)
+       #Gray CI
+       if (!is.null(gray_cl))
+       {
+         if (is.null(object2))
+         {
+          #Thick
+          graphics::matlines(v_gry_bnd, thick_q[,v_gray_cl], 
+                             type = 'l', lty = 1, lwd = sz_thick, col = gr_col)
+          #Thin
+          graphics::matlines(v_gry_bnd, thin_q[,v_gray_cl],
+                             type = 'l', lty = 1, lwd = sz_thin, col = gr_col)
+         } else {
+           
+           v_gry_bnd2 <- matrix(rep(rev(len + 1 - gray_cl2), 2), nrow = 2, byrow = TRUE)
+           #object
+           graphics::matlines((v_gry_bnd - offset), thick_q[,v_gray_cl], 
+                              type = 'l', lty = 1, lwd = sz_thick, col = gr_col)
+           graphics::matlines((v_gry_bnd - offset), thin_q[,v_gray_cl], 
+                              type = 'l', lty = 1, lwd = sz_thin, col = gr_col)
+           #object2
+           graphics::matlines((v_gry_bnd2 + offset), thick_q2[,v_gray_cl2], 
+                              type = 'l', lty = 1, lwd = sz_thick, col = gr_col)
+           graphics::matlines((v_gry_bnd2 + offset), thin_q2[,v_gray_cl2], 
+                              type = 'l', lty = 1, lwd = sz_thin, col = gr_col)
+         }
+       }
 
-    v_blk_bnd <- matrix(rep(rev(len + 1 - black_cl), 2), nrow = 2, byrow = TRUE)
-    v_gry_bnd <- matrix(rep(rev(len + 1 - gray_cl), 2), nrow = 2, byrow = TRUE)
-    v_wht_bnd <- matrix(rep(rev(len + 1 - white_cl), 2), nrow = 2, byrow = TRUE)
+       #White CI
+       if (!is.null(white_cl))
+       {
+         if (is.null(object2))
+         {
+          graphics::matlines(v_wht_bnd, thick_q[,v_white_cl], 
+                             type = 'l', lty = 1, lwd = sz_thick, 
+                             col = gr_col) #white (gray)
+          graphics::matlines(v_wht_bnd, thin_q[,v_white_cl], 
+                             type = 'l', lty = 1, lwd = sz_thin, 
+                             col = gr_col) #white (gray)
+         } else {
+           
+           v_wht_bnd2 <- matrix(rep(rev(len + 1 - white_cl2), 2), nrow = 2, byrow = TRUE)
+           #object
+           graphics::matlines((v_wht_bnd - offset), thick_q[,v_white_cl], 
+                              type = 'l', lty = 1, lwd = sz_thick, col = gr_col)
+           graphics::matlines((v_wht_bnd - offset), thin_q[,v_white_cl], 
+                              type = 'l', lty = 1, lwd = sz_thin, col = gr_col)
+           #object2
+           graphics::matlines((v_wht_bnd2 + offset), thick_q2[,v_white_cl2], 
+                              type = 'l', lty = 1, lwd = sz_thick, col = gr_col)
+           graphics::matlines((v_wht_bnd2 + offset), thin_q2[,v_white_cl2], 
+                              type = 'l', lty = 1, lwd = sz_thin, col = gr_col)
+         }
+       }
 
-    if (ref_ovl == TRUE)
-    {
-      #Black CI
-      if (!is.null(black_cl))
-      {
-        #Thick
-        graphics::matlines(v_blk_bnd, thick_q[,v_black_cl],
-                           type = 'l', lty = 1, lwd = sz_thick, col = 'black')
-        #Thin
-        graphics::matlines(v_blk_bnd, thin_q[,v_black_cl],
-                           type = 'l', lty = 1, lwd = sz_thin, col = 'black')
-      }
-
-      #Gray CI
-      if (!is.null(gray_cl))
-      {
-        #Thick
-        graphics::matlines(v_gry_bnd, thick_q[,v_gray_cl],
-                           type = 'l', lty = 1, lwd = sz_thick, col = gr_col)
-        #Thin
-        graphics::matlines(v_gry_bnd, thin_q[,v_gray_cl],
-                           type = 'l', lty = 1, lwd = sz_thin, col = gr_col)
-      }
-
-      #White CI
-      if (!is.null(white_cl))
-      {
-        graphics::matlines(v_wht_bnd, thick_q[,v_white_cl],
-                           type = 'l', lty = 1, lwd = sz_thick, col = gr_col) #white (gray)
-        graphics::matlines(v_wht_bnd, thin_q[,v_white_cl],
-                           type = 'l', lty = 1, lwd = sz_thin, col = gr_col) #white (gray)
-      }
-
-      #Medians
-      graphics::points(len:1, medians, pch = 16, col = 'white', cex = sz_med)
-      graphics::points(v_blk_bnd[1,], medians[v_black_cl], pch = 16, col = 'black', cex = sz_med)
-      graphics::points(v_gry_bnd[1,], medians[v_gray_cl], pch = 16, col = gr_col, cex = sz_med)
-      graphics::points(v_wht_bnd[1,], medians[v_white_cl], pch = 21, col = gr_col, cex = sz_med, lwd = 2)
-    } else{
-      graphics::matlines(rbind(1:len, 1:len), thick_q[,len:1],
-                         type = 'l', lty = 1, lwd = sz_thick, col = col)
-      graphics::matlines(rbind(1:len, 1:len), thin_q[,len:1],
-                         type = 'l', lty = 1, lwd = sz_thin, col = col)
-      #medians
-      graphics::points(1:len, medians[len:1], pch = 16,
-                       col = col, cex = sz_med)
-    }
-  }
-  graphics::par(mar=c(5,4,4,2) + 0.1)
+       #Medians
+       if (is.null(object2))
+       {
+        graphics::points(len:1, medians, pch = 16, col = 'white', cex = sz_med)
+        graphics::points(v_blk_bnd[1,], medians[v_black_cl], pch = 16, 
+                          col = 'black', cex = sz_med)
+        graphics::points(v_gry_bnd[1,], medians[v_gray_cl], pch = 16, 
+                          col = gr_col, cex = sz_med)
+        graphics::points(v_wht_bnd[1,], medians[v_white_cl], pch = 21, 
+                          col = gr_col, cex = sz_med, lwd = 2)
+       } else {
+         #object
+         graphics::points((len:1 - offset), medians, pch = 16, 
+                          col = 'white', cex = sz_med)
+         graphics::points((v_blk_bnd[1,] - offset), medians[v_black_cl], pch = 16, 
+                          col = 'black', cex = sz_med)
+         graphics::points((v_gry_bnd[1,] - offset), medians[v_gray_cl], pch = 16, 
+                          col = gr_col, cex = sz_med)
+         graphics::points((v_wht_bnd[1,] - offset), medians[v_white_cl], pch = 21, 
+                          col = gr_col, cex = sz_med, lwd = 2)
+         
+         #object2
+         graphics::points((len:1 + offset), medians2, pch = 16, 
+                          col = 'white', cex = sz_med)
+         graphics::points((v_blk_bnd2[1,] + offset), medians2[v_black_cl2], pch = 16, 
+                          col = 'black', cex = sz_med)
+         graphics::points((v_gry_bnd2[1,] + offset), medians2[v_gray_cl2], pch = 16, 
+                          col = gr_col, cex = sz_med)
+         graphics::points((v_wht_bnd2[1,] + offset), medians2[v_white_cl2], pch = 21, 
+                          col = gr_col, cex = sz_med, lwd = 2)
+       }
+     } else {
+       if (is.null(object2))
+       {
+        graphics::matlines(rbind(1:len, 1:len), thick_q[,len:1],
+                            type = 'l', lty = 1, lwd = sz_thick, col = COL[idx])
+        graphics::matlines(rbind(1:len, 1:len), thin_q[,len:1],
+                            type = 'l', lty = 1, lwd = sz_thin, col = COL[idx])
+        graphics::points(1:len, medians[len:1], pch = 16,
+                          col = COL[idx], cex = sz_med)
+       } else {
+         #object
+         graphics::matlines((rbind(1:len, 1:len) - offset), thick_q[,len:1],
+                            type = 'l', lty = 1, lwd = sz_thick, col = COL[idx])
+         graphics::matlines((rbind(1:len, 1:len) - offset), thin_q[,len:1],
+                            type = 'l', lty = 1, lwd = sz_thin, col = COL[idx])
+         graphics::points((1:len - offset), medians[len:1], pch = 16,
+                          col = COL[idx], cex = sz_med)
+         
+         #object2
+         graphics::matlines((rbind(1:len, 1:len) + offset), thick_q2[,len:1],
+                            type = 'l', lty = 1, lwd = sz_thick, col = COL2[idx])
+         graphics::matlines((rbind(1:len, 1:len) + offset), thin_q2[,len:1],
+                            type = 'l', lty = 1, lwd = sz_thin, col = COL2[idx])
+         graphics::points((1:len + offset), medians2[len:1], pch = 16,
+                          col = COL2[idx], cex = sz_med)
+       }
+     }
+   }
+  
+  #restore graphics
+  graphics::par(mar = c(5, 4, 4, 2) + 0.1)
 }

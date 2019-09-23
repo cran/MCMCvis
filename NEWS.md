@@ -1,6 +1,38 @@
 NEWS
 ====
 
+0.13.0:
+
+- `MCMCsummary` now takes `quantiles` as an argument, allowing user to specify which quantiles to return
+- `MCMCsummary` now takes `HPD` as an argument to calculate highest posterior density intervals
+- `MCMCsummary` now outputs as a data.frame rather than a matrix
+- `MCMCchains` fix bug that output different parameters names for `stanreg` and `brms` objects
+- `MCMCplot` fix bug that caused guidelines to plot over appropriate bounds
+
+
+0.12.6:
+
+- `MCMCplot` now has `object2`, `col2`, and `offset` arguments. Allows user to plot output from two separate models, as long as both model outputs have identical parameter names.
+
+
+0.12.5:
+
+- `MCMCplot` now has `guide_lines` argument, to plot lines to help reference which posterior corresponds to each parameter name
+- Remove deprecated arguments
+
+
+0.12.4:
+
+- Add support for objects output from `rstanarm` and `brms` packages
+- `MCMCplot` add support for plotting multiple colors on the same plot
+
+
+0.12.3:
+
+- `MCMCsummary` for `n.eff` the default is now `TRUE` (displays number of effective samples by default)
+- `MCMCtrace` now has the option `plot`. When `FALSE` no plot is output. Used in conjunction with `PPO_out = TRUE` to to calculate PPO without plotting trace plots.
+
+
 0.12.2:
 
 - `MCMCsummary` fix bug where Stan input was not being sorted by parameter index

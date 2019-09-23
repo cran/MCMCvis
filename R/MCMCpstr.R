@@ -17,7 +17,7 @@
 #' @param type Character string specifying whether to return summary information (calculated based on \code{func} argument) or posterior chains. Valid options are \code{'summary'} and \code{'chains'}. When \code{type = 'chains'}, the \code{'func'} argument is ignored. When \code{type = 'chains'}, posterior chains are concatenated and stored in the last dimension in the array for each element (parameter) of the list.
 #'
 #' @section Details:
-#' \code{object} argument can be a \code{stanfit} object (\code{rstan} package), an \code{mcmc.list} object (\code{coda} package), an \code{R2jags} model object (\code{R2jags} package), a \code{jagsUI} model object (\code{jagsUI} package), or a matrix containing MCMC chains (each column representing MCMC output for a single parameter, rows representing iterations in the chain). The function automatically detects the object type and proceeds accordingly.
+#' \code{object} argument can be a \code{stanfit} object (\code{rstan} package), a \code{stanreg} object (\code{rstanarm} package), a \code{brmsfit} object (\code{brms} package), an \code{mcmc.list} object (\code{coda} package), an \code{R2jags} model object (\code{R2jags} package), a \code{jagsUI} model object (\code{jagsUI} package), or a matrix containing MCMC chains (each column representing MCMC output for a single parameter, rows representing iterations in the chain). The function automatically detects the object type and proceeds accordingly.
 #'
 #' @examples
 #' #Load data
@@ -45,12 +45,22 @@ MCMCpstr <- function(object,
   if(coda::is.mcmc.list(object2) == TRUE)
   {
     temp_in <- object2
+    cti <- colnames(temp_in[[1]])
+    
+    if (class(object) == 'brmsfit' &  length(grep('Intercept]', cti)) > 1)
+    {
+      #remove Intercept and close bracket
+      i_idx <- grep('Intercept]', cti)
+      cti[i_idx] <- gsub(',Intercept', '', cti[i_idx])
+      colnames(temp_in[[1]]) <- cti
+    }
+    
     if(ISB == TRUE)
     {
-      names <- vapply(strsplit(colnames(temp_in[[1]]),
+      names <- vapply(strsplit(cti,
                                split = "[", fixed = TRUE), `[`, 1, FUN.VALUE=character(1))
     }else{
-      names <- colnames(temp_in[[1]])
+      names <- cti
     }
     np <- NCOL(object2[[1]])
 

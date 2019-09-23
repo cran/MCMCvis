@@ -1,7 +1,7 @@
 ## ---- eval = FALSE-------------------------------------------------------
 #  library(rjags)
 #  
-#  #create JAGS model
+#  # create JAGS model
 #  mf <- "
 #  model {
 #  for (i in 1:10)
@@ -26,17 +26,17 @@
 library(MCMCvis)
 
 ## ---- eval = FALSE-------------------------------------------------------
-#  #plug object directly into package function
+#  # plug object directly into package function
 #  MCMCsummary(jags_out, round = 2)
 
 ## ---- eval = FALSE-------------------------------------------------------
-#  ##     mean   sd  2.5%   50% 97.5% Rhat
-#  ## mu -0.46 3.09 -6.32 -0.51  5.44    1
+#  ##     mean   sd  2.5%   50% 97.5% Rhat n.eff
+#  ## mu -0.28 2.97 -6.13 -0.14  5.22    1  1397
 
 ## ---- eval = FALSE-------------------------------------------------------
 #  library(rstan)
 #  
-#  #create Stan model
+#  # create Stan model
 #  
 #  sm <- "
 #  data {
@@ -59,13 +59,13 @@ library(MCMCvis)
 #                    iter = 500)
 
 ## ---- eval = FALSE-------------------------------------------------------
-#  #plug object directly into package function
+#  # plug object directly into package function
 #  MCMCsummary(stan_out, round = 2)
 
 ## ---- eval = FALSE-------------------------------------------------------
-#  ##       mean   sd  2.5%   50% 97.5% Rhat
-#  ## mu   -0.48 2.91 -6.07 -0.35  5.39 1.01
-#  ## lp__ -0.56 0.68 -2.42 -0.28 -0.09 1.00
+#  ##       mean   sd  2.5%   50% 97.5% Rhat n.eff
+#  ## mu   -0.51 2.82 -6.06 -0.36  5.07 1.01   414
+#  ## lp__ -0.45 0.61 -2.27 -0.23 -0.01 1.00   508
 
 ## ---- message=FALSE------------------------------------------------------
 data(MCMC_data)
@@ -106,9 +106,26 @@ MCMCsummary(MCMC_data,
           params = 'alpha',
           Rhat = TRUE,
           n.eff = TRUE,
-          func = function(x) quantile(x, probs = c(0.01, 0.99)),
-          func_name = c('1%', '99%'),
+          probs = c(0.1, 0.5, 0.9),
           round = 2)
+
+## ------------------------------------------------------------------------
+MCMCsummary(MCMC_data, 
+          params = 'alpha',
+          Rhat = TRUE,
+          n.eff = TRUE,
+          HPD = TRUE,
+          hpd_prob = 0.8,
+          digits = 2)
+
+## ------------------------------------------------------------------------
+MCMCsummary(MCMC_data, 
+          params = 'alpha',
+          Rhat = TRUE,
+          n.eff = TRUE,
+          digits = 2,
+          func = function(x) ecdf(x)(-10),
+          func_name = "ecdf-10")
 
 ## ---- fig.width=5, fig.height=6------------------------------------------
 MCMCpstr(MCMC_data,
@@ -167,13 +184,21 @@ MCMCtrace(MCMC_data,
 ## ---- fig.width=5, fig.height=6------------------------------------------
 #same prior used for all parameters
 PR <- rnorm(15000, 0, 32) #equivalent to dnorm(0, 0.001) in JAGS
+MCMCtrace(MCMC_data, 
+          params = c('beta\\[1\\]', 'beta\\[2\\]', 'beta\\[3\\]'),
+          ISB = FALSE,
+          priors = PR,
+          pdf = FALSE,
+          post_zm = FALSE)
+
+## ------------------------------------------------------------------------
+PR <- rnorm(15000, 0, 32) #equivalent to dnorm(0, 0.001) in JAGS
 PPO <- MCMCtrace(MCMC_data, 
-                 params = c('beta\\[1\\]', 'beta\\[2\\]', 'beta\\[3\\]'),
-                 ISB = FALSE,
-                 priors = PR,
-                 pdf = FALSE,
-                 post_zm = FALSE,
-                 PPO_out = TRUE)
+          params = c('beta\\[1\\]', 'beta\\[2\\]', 'beta\\[3\\]'),
+          ISB = FALSE,
+          priors = PR,
+          plot = FALSE,
+          PPO_out = TRUE)
 
 PPO
 
@@ -222,25 +247,32 @@ ex2 <- MCMCchains(MCMC_data,
 
 ## ---- fig.width=5, fig.height=6------------------------------------------
 MCMCplot(MCMC_data, 
-       params = 'beta')
+         params = 'beta')
 
 ## ---- fig.width=5, fig.height=6------------------------------------------
 MCMCplot(MCMC_data, 
-       params = 'beta',
-       ref_ovl = TRUE)
+         params = 'beta',
+         ref_ovl = TRUE)
 
 ## ---- fig.width=5, fig.height=6------------------------------------------
 MCMCplot(MCMC_data, 
-       params = 'beta', 
-       rank = TRUE,
-       xlab = 'ESTIMATE')
+         params = 'beta', 
+         rank = TRUE,
+         xlab = 'ESTIMATE',
+         guide_lines = TRUE)
 
 ## ---- fig.width=5, fig.height=6------------------------------------------
 MCMCplot(MCMC_data, 
-       params = 'beta', 
-       rank = TRUE,
-       horiz = FALSE,
-       ylab = 'ESTIMATE')
+         params = 'beta', 
+         rank = TRUE,
+         horiz = FALSE,
+         ylab = 'ESTIMATE')
+
+## ---- fig.width=5, fig.height=6------------------------------------------
+MCMCplot(object = MCMC_data, 
+         object2 = MCMC_data2,
+         params = 'beta',
+         offset = 0.1)
 
 ## ---- fig.width=5, fig.height=6------------------------------------------
 MCMCplot(MCMC_data, 
@@ -250,11 +282,35 @@ MCMCplot(MCMC_data,
        main = 'MCMCvis plot',
        labels = c('First param', 'Second param', 'Third param', 
                   'Fourth param', 'Fifth param', 'Sixth param'), 
-       col = 'red',
+       col = c('red', 'blue', 'green', 'purple', 'orange', 'black'),
        sz_labels = 1.5,
        sz_med = 2,
        sz_thick = 7,
        sz_thin = 3,
        sz_ax = 4,
        sz_main_txt = 2)
+
+## ------------------------------------------------------------------------
+PR <- rnorm(15000, 0, 32) #equivalent to dnorm(0, 0.001) in JAGS
+PPO <- MCMCtrace(MCMC_data, 
+          params = c('beta\\[1\\]', 'beta\\[2\\]', 'beta\\[3\\]'),
+          ISB = FALSE,
+          priors = PR,
+          plot = FALSE,
+          PPO_out = TRUE)
+
+## ---- fig.width=5, fig.height=6------------------------------------------
+#make caterpillar plot for beta parameters
+MCMCplot(MCMC_data, 
+         params = c('beta\\[1\\]', 'beta\\[2\\]', 'beta\\[3\\]'),
+         ISB = FALSE,
+         xlim = c(-60, 35))
+
+#each parameter is a y-unit of 1
+for (i in 1:NROW(PPO))
+{
+  text(x = 10, y = NROW(PPO) - i + 1, 
+       paste0('PPO: ', PPO[i,2], '%'), 
+       pos = 4, col = 'red')
+}
 
