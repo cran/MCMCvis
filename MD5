@@ -1,12 +1,12 @@
-f37f86574c1a1917e78a52dc90cd9722 *DESCRIPTION
+2cd5d90537259fea7311e7279f9d859b *DESCRIPTION
 0e1005add8daf0f63785fd10db442829 *NAMESPACE
-8055a9b7facce9afedeedd76132e35fd *NEWS.md
+2a5b9856f1d7fc8e4ee07e59411021e5 *NEWS.md
 ecf6627ca4eb4ce1df9b5694ffb9b1d8 *R/MCMC_data.R
 01d0740dbe27458e6430b34f5cb87fe4 *R/MCMC_data2.R
 2aac52d9d173ddc0d2458eca187f4888 *R/MCMCchains.R
 ebb53c5c65a192037285a6ba934fdb3e *R/MCMCplot.R
 07905c0ad957c4e5b48732d4cee1558a *R/MCMCpstr.R
-85813e86220d5c5aeb64c0019b8147e8 *R/MCMCsummary.R
+9ff6ce9801fb5d6d752632038c7a2cc3 *R/MCMCsummary.R
 7cd1667173cfc671c3a58b30e99241bf *R/MCMCtrace.R
 5d8d8ac77cd49afe90148df7751d2258 *R/MCMCvis.R
 5bf20f49be08e4590eec69ea499086ef *build/vignette.rds
@@ -16,7 +16,7 @@ c1febb3171c05b7a7a1a57da09c6d3bb *data/datalist
 e6724f930c57ef2565432dfd9b1ec5e3 *inst/CITATION
 e77bafffb34e2341120f6c86db987fd5 *inst/doc/MCMCvis.R
 2ece0bede1c501fb7bac4348f04b0c7a *inst/doc/MCMCvis.Rmd
-d359788893cba2b08b8d3903b3495362 *inst/doc/MCMCvis.html
+1a3b75985153011fbbf39f217e069fae *inst/doc/MCMCvis.html
 c6e6dabb4e18b3a5b74fb8df1cc5ca1a *man/MCMC_data.Rd
 6514bd9b29c742cfb0e903803f844d99 *man/MCMC_data2.Rd
 bdbc6be2f1455504e2e3de9214a2aea3 *man/MCMCchains.Rd
