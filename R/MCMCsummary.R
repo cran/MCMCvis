@@ -114,7 +114,7 @@ MCMCsummary <- function(object,
       if (np > 1) ch_bind <- do.call("rbind", object2) else ch_bind <- as.matrix(object2)
     }
 
-    x <- list()  
+    x <- list()
   
 # mean, sd, and quantiles  
     
@@ -187,6 +187,7 @@ MCMCsummary <- function(object,
         colnames(bind_q) <- c(paste0(signif(hpd_prob * 100, digits = 3), "%_HPDL"), paste0(signif(hpd_prob * 100, digits = 3), "%_HPDU"))  
       }
     }
+    
     x[[1]] <- cbind(bind_mn, bind_sd, bind_q) 
   
 # rhat 
@@ -267,6 +268,26 @@ MCMCsummary <- function(object,
     all_params <- row.names(rstan::summary(object2)$summary)
     rs_df <- data.frame(rstan::summary(object2)$summary)
     
+    #if brms, reassign names without b_ and r_ (as in MCMCchains)
+    if (class(object) == 'brmsfit')
+    {
+      sp_names_p <- names(object2@sim$samples[[1]])
+      #remove b_ and r_
+      st_nm <- substr(sp_names_p, start = 1, stop = 2)
+      sp_names <- rep(NA, length(sp_names_p))
+      b_idx <- which(st_nm == 'b_')
+      r_idx <- which(st_nm == 'r_')
+      ot_idx <- which(st_nm != 'b_' & st_nm != 'r_')
+      #fill names vec with b_ and r_ removed
+      sp_names[b_idx] <- gsub('b_', '', sp_names_p[b_idx])
+      sp_names[r_idx] <- gsub('r_', '', sp_names_p[r_idx])
+      sp_names[ot_idx] <- sp_names_p[ot_idx]
+      
+      #assign names to df
+      all_params <- sp_names
+      row.names(rs_df) <- all_params
+    }
+    
     # filtering of parameters from rstan object - from MCMCchains
     if (ISB == TRUE) {
       names <- vapply(strsplit(all_params, split = "[", fixed = TRUE), `[`, 1, FUN.VALUE = character(1))
@@ -274,7 +295,7 @@ MCMCsummary <- function(object,
       names <- all_params
     }
     
-    x <- list()  
+    x <- list()
   
 # INDEX BLOCK exclusions
     
@@ -386,9 +407,10 @@ MCMCsummary <- function(object,
 # end sort
     
 # convert stan object to matrix if computing non default intervals or using custom func
-    if (!is.null(func) | HPD==TRUE | identical(probs, c(0.025, 0.5, 0.975))==FALSE) {
+    if (!is.null(func) | HPD==TRUE | 
+        identical(probs, c(0.025, 0.5, 0.975))==FALSE) {
       ch_bind <- as.matrix(object2)[, f_ind]
-    }    
+    } 
 
 # mean, sd, and quantiles  
     
@@ -487,31 +509,18 @@ MCMCsummary <- function(object,
     }
     x[[1]] <- cbind(bind_mn, bind_sd, bind_q) 
 
-# rhat 
+# rhat - rhat in Stan calculated within chain (different than with coda package)
 
     if (Rhat == TRUE) {
-      if (dim(rstan::summary(object2)$c_summary)[3] > 1) {
-        r_hat <- data.frame(round(rs_df["Rhat"][f_ind, 1], digits = 2))
-        colnames(r_hat) <- "r_hat"
-      } else {
-        warning("Rhat statistic cannot be calculated with one chain. NAs inserted.")
-        r_hat <- data.frame(rep(NA, length(f_ind)))
-        colnames(r_hat) <- "r_hat"
-      }
+      r_hat <- data.frame(round(rs_df["Rhat"][f_ind, 1], digits = 2))
+      colnames(r_hat) <- "Rhat"
       x[[(length(x) + 1)]] <- r_hat  
     }  
 
-# neff      
-      
+# neff - neff in Stan is calculated within chain (different than with coda package)    
     if (n.eff == TRUE) {
-      if (dim(rstan::summary(object2)$c_summary)[3] > 1) {
       neff <- data.frame(round(rs_df["n_eff"][f_ind, 1], digits = 0))
       colnames(neff) <- "n.eff"
-    } else {
-        warning('Number of effective samples cannot be calculated without individual chains. NAs inserted.')
-        neff <- data.frame(rep(NA, np))
-        colnames(neff) <- "n.eff"
-      }  
       x[[(length(x) + 1)]] <- neff
     }
  

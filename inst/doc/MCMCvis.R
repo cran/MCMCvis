@@ -79,7 +79,7 @@ MCMCsummary(MCMC_data, round = 2)
 ## ------------------------------------------------------------------------
 MCMCsummary(MCMC_data, 
           params = 'alpha', 
-          digits = 2)
+          round = 2)
 
 ## ------------------------------------------------------------------------
 MCMCsummary(MCMC_data, 
@@ -116,14 +116,14 @@ MCMCsummary(MCMC_data,
           n.eff = TRUE,
           HPD = TRUE,
           hpd_prob = 0.8,
-          digits = 2)
+          round = 2)
 
 ## ------------------------------------------------------------------------
 MCMCsummary(MCMC_data, 
           params = 'alpha',
           Rhat = TRUE,
           n.eff = TRUE,
-          digits = 2,
+          round = 2,
           func = function(x) ecdf(x)(-10),
           func_name = "ecdf-10")
 
