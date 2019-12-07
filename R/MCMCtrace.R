@@ -169,12 +169,12 @@ MCMCtrace <- function(object,
   .pardefault <- graphics::par(no.readonly = T)
   
   #SORTING BLOCK
-  if(typeof(object) == 'double')
+  if (methods::is(object, 'matrix'))
   {
     warning('Input type matrix - assuming only one chain for each parameter.')
     object1 <- coda::as.mcmc.list(coda::as.mcmc(object))
     object2 <- MCMCchains(object1, params, excl, ISB, mcmc.list = TRUE)
-  }else{
+  } else {
     object2 <- MCMCchains(object, params, excl, ISB, mcmc.list = TRUE)
   }
   
@@ -190,7 +190,7 @@ MCMCtrace <- function(object,
   if (nrow(object2[[1]]) > iter)
   {
     it <- (nrow(object2[[1]]) - iter+1) : nrow(object2[[1]])
-  }else {
+  } else {
     it <- 1 : nrow(object2[[1]])
   }
   
@@ -242,21 +242,20 @@ MCMCtrace <- function(object,
   #PLOT BLOCK
   if (plot == TRUE)
   {
-    if(pdf == TRUE)
+    if (pdf == TRUE)
     {
-      setwd(wd)
-      if(missing(filename))
+      if (missing(filename))
       {
-        file_out <- 'MCMCtrace.pdf'
-      }else{
-        if(grepl('.pdf', filename, fixed = TRUE))
+        file_out <- paste0(wd, '/MCMCtrace.pdf')
+      } else {
+        if (grepl('.pdf', filename, fixed = TRUE))
         {
-          file_out <- paste0(filename)
-        }else{
-          file_out <- paste0(filename, '.pdf')
+          file_out <- paste0(wd, '/', filename)
+        } else {
+          file_out <- paste0(wd, '/', filename, '.pdf')
         }
       }
-      pdf(file= file_out)
+      pdf(file = file_out)
     }
     
     #plotting parameters
@@ -463,8 +462,6 @@ MCMCtrace <- function(object,
       }
     }
     
-    
-    
     if (type == 'both')
     {
       for (j in 1:length(np))
@@ -498,23 +495,24 @@ MCMCtrace <- function(object,
           if (NCOL(priors) == 1)
           {
             wp <- priors
-          }else{
+          } else {
             wp <- priors[,j]
           }
           lwp <- length(wp)
           if (lwp > length(it)*n_chains)
           {
             #warnings in block above
-            pit <- (lwp - (length(it)*n_chains)+1) : lwp
+            pit <- (lwp - (length(it) * n_chains) + 1) : lwp
             wp2 <- wp[pit]
           }
           if (lwp < length(it)*n_chains)
           {
             #warnings in block above
-            samps <- sample(wp, size = ((length(it)*n_chains)-lwp), replace = TRUE)
+            samps <- sample(wp, size = ((length(it) * n_chains) - lwp),
+                            replace = TRUE)
             wp2 <- c(wp, samps)
           }
-          if (lwp == length(it)*n_chains)
+          if (lwp == length(it) * n_chains)
           {
             wp2 <- wp
           }
@@ -527,7 +525,7 @@ MCMCtrace <- function(object,
           #calculate percent ovelap
           tmlt_1c <- matrix(tmlt, ncol = 1)
           pp <- list(wp2, tmlt_1c)
-          ovr_v <- round((overlapping::overlap(pp)$OV[[1]])*100, digits = 1)
+          ovr_v <- round((overlapping::overlap(pp)$OV[[1]]) * 100, digits = 1)
           ovrlap <- paste0(ovr_v, '% overlap')
           
           if (PPO_out == TRUE)
@@ -684,7 +682,7 @@ MCMCtrace <- function(object,
           if (length(gvals) == 1)
           {
             gv <- gvals
-          }else {
+          } else {
             gv <- gvals[j]
           }
           graphics::abline(v = gv, lty = 2, lwd = 3, col = ref_col)
@@ -733,7 +731,7 @@ MCMCtrace <- function(object,
           if (NCOL(priors) == 1)
           {
             wp <- priors
-          }else{
+          } else {
             wp <- priors[,j]
           }
           lwp <- length(wp)
@@ -829,7 +827,7 @@ MCMCtrace <- function(object,
             graphics::axis(1, lwd.ticks = sz_ax, labels = FALSE, at = pos_tick_x_den)
             graphics::axis(2, lwd.ticks = sz_ax, labels = FALSE, at = pos_tick_y_den)
           }
-        } else{
+        } else {
           
           dens <- stats::density(rbind(tmlt))
           #set axes limits according to inputs
@@ -918,7 +916,7 @@ MCMCtrace <- function(object,
           if (length(gvals) == 1)
           {
             gv <- gvals
-          }else {
+          } else {
             gv <- gvals[j]
           }
           graphics::abline(v = gv, lty = 2, lwd = 3, col = ref_col)
@@ -931,14 +929,14 @@ MCMCtrace <- function(object,
       stop('Invalid argument for "type". Valid inputs are "both", "trace", and "density".')
     }
     
-    if(pdf == TRUE)
+    if (pdf == TRUE)
     {
       invisible(grDevices::dev.off())
-      if(open_pdf == TRUE)
+      if (open_pdf == TRUE)
       {
-        system(paste0('open ', paste0('"', file_out, '"')))
+        system(paste0('open ', file_out))
       }
-    }else{
+    } else {
       graphics::par(.pardefault)
     }
   }
@@ -956,7 +954,7 @@ MCMCtrace <- function(object,
         if (NCOL(priors) == 1)
         {
           wp <- priors
-        }else{
+        } else {
           wp <- priors[,j]
         }
         lwp <- length(wp)

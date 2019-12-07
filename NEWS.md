@@ -1,6 +1,16 @@
 NEWS
 ====
 
+0.13.5:
+
+- All functions now avoid using function `class` (and use `is` instead) as `matrix` objects will also be `array` as of R 4.0.0
+
+
+0.13.4:
+
+- `MCMCtrace` no longer changes working dir when `wd` is specified - just puts pdf there
+
+
 0.13.3:
 
 - `MCMCpstr` fix bug where dimensions were not displayed properly for Stan models
