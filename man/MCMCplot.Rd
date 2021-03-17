@@ -8,8 +8,11 @@ MCMCplot(
   object,
   object2 = NULL,
   params = "all",
+  HPD = FALSE,
+  ci = c(50, 95),
   excl = NULL,
   ISB = TRUE,
+  exact = TRUE,
   ref = 0,
   ref_ovl = FALSE,
   col = "black",
@@ -46,9 +49,15 @@ MCMCplot(
 
 Default \code{'all'} plots posteriors for all parameters. See VALUE below.}
 
+\item{HPD}{Logical specifying whether to calculate equal-tailed credible intervals (\code{HPD = FALSE}) or highest posterior density intervals (\code{HPD = TRUE}) for the selected parameters. Default is \code{HPD = FALSE}.}
+
+\item{ci}{Numeric vector of length 2, where each element is (0,100] and represents the width of an equal-tailed (\code{HPD = FALSE}) or highest posterior density (\code{HPD = TRUE}) credible interval. The first element of this vector corresponds to the thicker (narrower) credible interval displayed on the plot (default is 0.5) and the second element of this vector corresponds to the thinner (wider) credible interval (default is 0.95). The first credible interval width (`code{ci[1]}) must be less than or equal to the width of the second credible interval (`code{ci[2]}).}
+
 \item{excl}{Character string (or vector of character strings) denoting parameters to exclude. Used in conjunction with \code{params} argument to select parameters of interest.}
 
-\item{ISB}{Ignore Square Brackets (ISB). Logical specifying whether square brackets should be ignored in the \code{params} and \code{excl} arguments. If \code{TRUE}, square brackets are ignored - input from \code{params} and \code{excl} are otherwise matched exactly. If \code{FALSE}, square brackets are not ignored - input from \code{params} and \code{excl} are matched using grep, which can take arguments in regular expression format. This allows partial names to be used when specifying parameters of interest.}
+\item{ISB}{Ignore Square Brackets (ISB). Logical specifying whether square brackets should be ignored in the \code{params} and \code{excl} arguments. If \code{TRUE}, square brackets are ignored. If \code{FALSE}, square brackets are not ignored.  This allows partial names to be used when specifying parameters of interest. Use \code{exact} argument to specify whether input from \code{params} and \code{excl} arguments should be matched exactly.}
+
+\item{exact}{Logical specifying whether input from \code{params} and \code{excl} arguments should be matched exactly (after ignoring square brackets if \code{ISB = FALSE}). If \code{TRUE}, input from \code{params} and \code{excl} are matched exactly (after taking \code{ISB} argument into account). If \code{FALSE}, input from \code{params} and \code{excl} are matched using regular expression format (after taking \code{ISB} argument into account).}
 
 \item{ref}{Value indicating where vertical reference line should be created and what value to use a reference for caterpillar median coloration.
 
@@ -123,7 +132,7 @@ Points represent posterior medians. Parameters where 50\% credible intervals ove
 
 When \code{object2} is specified, paired caterpillar plots of each parameter are produced. For this reason, parameter names of \code{object} and \code{object2} specified with the \code{params} argument must be identical (to be used for comparing posterior estimates of similar models). \code{col} and \code{col2} arguments can be specified to change the color of output from \code{object} and \code{object2}, respectively. By default, output from \code{object} is plotted in black and \code{object2} is plotted in red. The \code{ref_ovl} argument can also be specified.
 
-\code{object} argument can be a \code{stanfit} object (\code{rstan} package), a \code{stanreg} object (\code{rstanarm} package), a \code{brmsfit} object (\code{brms} package), an \code{mcmc.list} object (\code{coda} package), an \code{R2jags} model object (\code{R2jags} package), a \code{jagsUI} model object (\code{jagsUI} package), or a matrix containing MCMC chains (each column representing MCMC output for a single parameter, rows representing iterations in the chain). The function automatically detects the object type and proceeds accordingly.
+\code{object} argument can be a \code{stanfit} object (\code{rstan} package), a \code{stanreg} object (\code{rstanarm} package), a \code{brmsfit} object (\code{brms} package), an \code{mcmc.list} object (\code{coda} and \code{rjags} packages), \code{mcmc} object (\code{coda} and \code{nimble} packages), \code{list} object (\code{nimble} package), an \code{R2jags} model object (\code{R2jags} package), a \code{jagsUI} model object (\code{jagsUI} package), or a matrix containing MCMC chains (each column representing MCMC output for a single parameter, rows representing iterations in the chain). The function automatically detects the object type and proceeds accordingly.
 }
 
 \section{Notes}{
@@ -150,9 +159,14 @@ MCMCplot(MCMC_data, labels = NULL)
 #Just 'beta' parameters
 MCMCplot(MCMC_data, params = 'beta')
 
+#Just 'beta' parameters using highest posterior density intervals
+MCMCplot(MCMC_data, params = 'beta', HPD = TRUE)
 #Just 'beta[1]', 'beta[4]', and 'alpha[3]'
-#'params' takes regular expressions when ISB = FALSE, square brackets must be escaped with '\\'
-MCMCplot(MCMC_data, params = c('beta\\\\[1\\\\]', 'beta\\\\[4\\\\]', 'alpha\\\\[3\\\\]'), ISB = FALSE)
+MCMCplot(MCMC_data, params = c('beta[1]', 'beta[4]', 'alpha[3]'), ISB = FALSE, exact = TRUE)
+
+#Just 'beta[1]', 'beta[4]', and 'alpha[3]' and change the credible interval widths
+MCMCplot(MCMC_data, ci = c(50, 89), params = c('beta[1]', 'beta[4]', 'alpha[3]'), 
+  ISB = FALSE, exact = TRUE)
 
 #Rank parameters by posterior mean
 MCMCplot(MCMC_data, params = 'beta', rank = TRUE)

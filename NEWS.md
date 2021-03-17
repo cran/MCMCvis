@@ -1,6 +1,31 @@
 NEWS
 ====
 
+0.15.0:
+
+- `MCMCdiag` function added to create .txt file summarizing model inputs and outputs and save model object as .rds file
+- All functions now take `exact` as an argument to parse desired parameter. `ISB = TRUE` no longer uses regex matching (`exact` should be used to specify this).
+- Add support for objects output from the `nimble` package
+- `MCMCpstr` fix bug where the incorrect number of dimensions would be returned when subsetting a param with >1 dim
+- `MCMCplot` now takes the argument `ci` which can be used to specify the credible interval displayed in the caterpillar plot
+- `MCMCplot` now takes the argument `HPD` which can be used to specify whether highest posterior density intervals or equal-tailed intervals should be displayed in the caterpillar plot
+
+
+0.14.3:
+
+- `MCMCplot` fix bug where error would result when trying to plot a single parameter
+
+
+0.14.2:
+
+- `MCMCplot` can now plot models that have NA for posterior estimates. Useful when plotting two models side-by-side is desired and one model has parameters that the other does not (use MCMCchains to create matrix of draws, add NA-filled cols with missing parameter names, and plot)
+
+
+0.14.1:
+
+- `MCMCtrace` fix undesired behavior when `post_zm` is specified as `FALSE`
+
+
 0.14.0:
 
 - `MCMCsummary` for model objects fit with `jagsUI`, the function now returns Rhat and n.eff values that coincide with values calculated in that package (e.g., split-chain Rhat), rather than calculating these with the `coda` package. These values are fed into `MCMCtrace` when `Rhat` and/or `n.eff` are specified as `TRUE`.
