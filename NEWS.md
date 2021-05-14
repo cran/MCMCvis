@@ -1,6 +1,12 @@
 NEWS
 ====
 
+0.15.2:
+
+- `MCMCdiag` add more descriptive message about output from `nimble` objects
+- `MCMCtrace` fix rdev matrix warning
+
+
 0.15.1:
 
 - `MCMCplot` fix bug that prevented plotting with a single parameter
