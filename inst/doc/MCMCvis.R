@@ -155,7 +155,8 @@ MCMCsummary(MCMC_data,
             Rhat = TRUE, 
             n.eff = TRUE, 
             round = 2, 
-            func = function(x) ecdf(x)(-10), func_name = "ecdf-10")
+            func = function(x) ecdf(x)(-10), func_name = "ecdf-10",
+            pg0 = TRUE)
 
 ## -----------------------------------------------------------------------------
 MCMCpstr(MCMC_data, 
