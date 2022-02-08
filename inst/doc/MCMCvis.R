@@ -311,7 +311,8 @@ MCMCplot(MCMC_data,
 MCMCplot(object = MCMC_data, 
          object2 = MCMC_data2, 
          params = 'beta', 
-         offset = 0.1)
+         offset = 0.1,
+         ref_ovl = TRUE)
 
 ## ---- fig.width = 7, fig.height = 5, fig.align = 'center'---------------------
 MCMCplot(MCMC_data, 
